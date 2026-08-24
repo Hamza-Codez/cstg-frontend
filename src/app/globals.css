@@ -44,3 +44,10 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-structure);
 }
+
+@layer utilities {
+  .bg-gradient-primary {
+    background: #2487b5;
+    background: linear-gradient(323deg, rgba(36, 135, 181, 1) 0%, rgba(3, 70, 133, 1) 100%);
+  }
+}

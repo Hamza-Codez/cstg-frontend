@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { SlaCountdown } from "@/components/sla/sla-countdown";
 import { StatusBadge } from "@/components/tickets/status-badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { listTickets } from "@/lib/api/tickets";
@@ -83,8 +84,10 @@ export default async function RequestsPage() {
                         audience="customer"
                         settled={settled}
                       />
-                      <div className="ml-auto flex items-center text-[15px] font-medium text-accent group-hover:underline">
-                        View Request &rarr;
+                      <div className="ml-auto flex items-center">
+                        <div className={buttonVariants({ variant: "secondary", className: "pointer-events-none" })}>
+                          View Request
+                        </div>
                       </div>
                     </CardBody>
                   </Card>

@@ -52,5 +52,5 @@ export function Tr({ children, onClick }: { children: ReactNode; onClick?: () =>
 }
 
 export function Td({ children, className }: { children: ReactNode; className?: string }) {
-  return <td className={cn("px-4 py-1.5 text-text", className)}>{children}</td>;
+  return <td className={cn("px-4 py-0.5 text-text", className)}>{children}</td>;
 }
