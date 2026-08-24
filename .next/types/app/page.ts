@@ -1,4 +1,4 @@
-// File: F:\project\CSTG-System\frontend\src\app\page.tsx
+// File: F:\project\cstg-systems\cstg-frontend\src\app\page.tsx
 import * as entry from '../../../src/app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

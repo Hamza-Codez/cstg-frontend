@@ -42,8 +42,8 @@ export function Tr({ children, onClick }: { children: ReactNode; onClick?: () =>
     <tr
       onClick={onClick}
       className={cn(
-        "border-t border-border",
-        onClick && "cursor-pointer hover:bg-canvas",
+        "border-t border-border transition-colors hover:bg-canvas",
+        onClick && "cursor-pointer",
       )}
     >
       {children}
@@ -52,5 +52,5 @@ export function Tr({ children, onClick }: { children: ReactNode; onClick?: () =>
 }
 
 export function Td({ children, className }: { children: ReactNode; className?: string }) {
-  return <td className={cn("px-4 py-3 text-text", className)}>{children}</td>;
+  return <td className={cn("px-4 py-1.5 text-text", className)}>{children}</td>;
 }

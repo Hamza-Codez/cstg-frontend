@@ -10,6 +10,7 @@ import Link from "next/link";
 import { SlaCountdown } from "@/components/sla/sla-countdown";
 import { PriorityBadge } from "@/components/tickets/priority-badge";
 import { StatusBadge } from "@/components/tickets/status-badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableHead, Td, Th, Tr } from "@/components/ui/table";
 import type { TicketResponse } from "@/lib/types";
 
@@ -27,6 +28,7 @@ export function TicketTable({
         <Th>Status</Th>
         <Th>Priority</Th>
         <Th>SLA</Th>
+        <Th>Action</Th>
       </TableHead>
       <TableBody>
         {tickets.map((ticket) => {
@@ -60,6 +62,14 @@ export function TicketTable({
                   audience="staff"
                   settled={settled}
                 />
+              </Td>
+              <Td>
+                <Link
+                  href={`/tickets/${ticket.id}`}
+                  className={buttonVariants({ variant: "secondary" })}
+                >
+                  View
+                </Link>
               </Td>
             </Tr>
           );

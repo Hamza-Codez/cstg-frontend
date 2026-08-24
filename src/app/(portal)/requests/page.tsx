@@ -66,7 +66,7 @@ export default async function RequestsPage() {
             const settled = ticket.status === "RESOLVED" || ticket.status === "CLOSED";
             return (
               <li key={ticket.id}>
-                <Link href={`/requests/${ticket.id}`} className="block cursor-pointer">
+                <Link href={`/requests/${ticket.id}`} className="group block cursor-pointer">
                   <Card className="transition-colors duration-fast hover:border-structure">
                     <CardHeader>
                       <CardTitle>{ticket.subject}</CardTitle>
@@ -83,6 +83,9 @@ export default async function RequestsPage() {
                         audience="customer"
                         settled={settled}
                       />
+                      <div className="ml-auto flex items-center text-[15px] font-medium text-accent group-hover:underline">
+                        View Request &rarr;
+                      </div>
                     </CardBody>
                   </Card>
                 </Link>

@@ -1,4 +1,4 @@
-// File: F:\project\CSTG-System\frontend\src\app\(auth)\sign-in\page.tsx
+// File: F:\project\cstg-systems\cstg-frontend\src\app\(auth)\sign-in\page.tsx
 import * as entry from '../../../../../src/app/(auth)/sign-in/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

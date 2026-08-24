@@ -21,6 +21,16 @@
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
     ],
+    "/(auth)/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(auth)/layout.js"
+    ],
+    "/(auth)/sign-in/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(auth)/sign-in/page.js"
+    ],
     "/(staff)/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -36,15 +46,35 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(staff)/dashboard/page.js"
     ],
-    "/(auth)/layout": [
+    "/(staff)/tickets/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(auth)/layout.js"
+      "static/chunks/app/(staff)/tickets/page.js"
     ],
-    "/(auth)/sign-in/page": [
+    "/(auth)/sign-out/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(auth)/sign-in/page.js"
+      "static/chunks/app/(auth)/sign-out/route.js"
+    ],
+    "/(staff)/queue/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(staff)/queue/page.js"
+    ],
+    "/(staff)/unassigned/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(staff)/unassigned/page.js"
+    ],
+    "/(staff)/overdue/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(staff)/overdue/page.js"
+    ],
+    "/(staff)/tickets/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(staff)/tickets/[id]/page.js"
     ]
   }
 }

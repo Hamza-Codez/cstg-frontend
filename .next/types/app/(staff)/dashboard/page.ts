@@ -1,4 +1,4 @@
-// File: F:\project\CSTG-System\frontend\src\app\(staff)\dashboard\page.tsx
+// File: F:\project\cstg-systems\cstg-frontend\src\app\(staff)\dashboard\page.tsx
 import * as entry from '../../../../../src/app/(staff)/dashboard/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
