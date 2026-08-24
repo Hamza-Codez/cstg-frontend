@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { AttachmentList } from "@/components/attachments/attachment-list";
 import { AttachmentUpload } from "@/components/attachments/attachment-upload";
 import { CommentComposer } from "@/components/comments/comment-composer";
+import { CustomerActions } from "@/components/tickets/customer-actions";
 import { Timeline } from "@/components/comments/timeline";
 import { SlaCountdown } from "@/components/sla/sla-countdown";
 import { StatusBadge } from "@/components/tickets/status-badge";
@@ -76,7 +77,8 @@ export default async function RequestDetailPage({
               breached={ticket.sla_breached_at !== null && !settled}
             />
             <SlaCountdown
-              deadline={ticket.deadline}
+              dueAt={ticket.sla_due_at}
+                        status={ticket.status}
               createdAt={ticket.created_at}
               audience="customer"
               settled={settled}
@@ -120,7 +122,10 @@ export default async function RequestDetailPage({
               ))}
             </ul>
           )}
-          {!settled && <CommentComposer ticketId={ticket.id} audience="customer" />}
+          <CustomerActions ticketId={ticket.id} status={ticket.status} />
+          {ticket.status !== "CLOSED" && (
+            <CommentComposer ticketId={ticket.id} audience="customer" />
+          )}
         </CardBody>
       </Card>
 

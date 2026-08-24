@@ -70,3 +70,28 @@ describe("audience wording", () => {
     }
   });
 });
+
+describe("P16 lifecycle vocabulary", () => {
+  it("labels PENDING_CUSTOMER for both audiences", () => {
+    // A missing label renders an enum name to a user, so this is a table check
+    // rather than a spot check.
+    expect(statusLabel("PENDING_CUSTOMER", "customer")).toBe("Waiting for your reply");
+    expect(statusLabel("PENDING_CUSTOMER", "staff")).toBe("Waiting on customer");
+  });
+
+  it("tells the customer that THEY are the blocker", () => {
+    // "Pending customer" describes the ticket from the desk's side; the
+    // customer needs to know what to do.
+    expect(statusLabel("PENDING_CUSTOMER", "customer")).toMatch(/your/i);
+  });
+
+  it("keeps every status labelled for both audiences", () => {
+    const statuses = ["OPEN", "IN_PROGRESS", "PENDING_CUSTOMER", "RESOLVED", "CLOSED"] as const;
+    for (const status of statuses) {
+      for (const audience of ["customer", "staff"] as const) {
+        expect(statusLabel(status, audience)).toBeTruthy();
+        expect(statusLabel(status, audience)).not.toBe(status);
+      }
+    }
+  });
+});

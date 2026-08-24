@@ -69,7 +69,8 @@ export default async function StaffTicketPage({
         <CardHeader>
           <CardTitle>{ticket.subject}</CardTitle>
           <SlaCountdown
-            deadline={ticket.deadline}
+            dueAt={ticket.sla_due_at}
+                        status={ticket.status}
             createdAt={ticket.created_at}
             audience="staff"
             settled={settled}

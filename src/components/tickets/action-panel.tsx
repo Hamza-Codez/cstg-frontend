@@ -4,8 +4,11 @@
  * Action panel (docs/UIUX_FRONTEND.md §5, §7.2.3).
  *
  * Renders only the transitions that are valid right now — invalid actions are
- * not disabled, they are absent (§1.2). At most one primary CTA is shown; the
- * lifecycle is linear, so there is never more than one forward move anyway.
+ * not disabled, they are absent (§1.2).
+ *
+ * The lifecycle stopped being linear at P16: from IN_PROGRESS an agent can
+ * resolve *or* wait on the customer. At most one primary CTA is still shown
+ * (§3.1) — the option marked `primary` — and any others render secondary.
  */
 
 import { useActionState, useEffect } from "react";
@@ -59,7 +62,12 @@ export function ActionPanel({
         <form key={option.to} action={formAction}>
           <input type="hidden" name="ticket_id" value={ticketId} />
           <input type="hidden" name="to" value={option.to} />
-          <Button type="submit" variant="primary" block disabled={pending}>
+          <Button
+            type="submit"
+            variant={option.primary ? "primary" : "secondary"}
+            block
+            disabled={pending}
+          >
             {option.label}
           </Button>
         </form>

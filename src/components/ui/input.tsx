@@ -23,9 +23,9 @@ export interface FieldProps {
 export function Field({ label, htmlFor, required, error, hint, children }: FieldProps) {
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={htmlFor} className="text-[13px] text-text">
+      <label htmlFor={htmlFor} className="text-[13px] font-medium text-structure">
         {label}
-        {required && <span className="text-text/60"> (required)</span>}
+        {required && <span className="font-normal text-text/60"> (required)</span>}
       </label>
       {hint && <p className="text-xs text-text/60">{hint}</p>}
       {children}
@@ -58,7 +58,7 @@ export function Input({ label, error, hint, id, required, className, ...props }:
         className={cn(
           "rounded-md border bg-surface px-3 py-2 text-sm text-text",
           "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent",
-          error ? "border-overdue" : "border-border",
+          error ? "border-overdue" : "border-structure",
           className,
         )}
         {...props}

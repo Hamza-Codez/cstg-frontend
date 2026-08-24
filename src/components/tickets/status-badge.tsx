@@ -11,6 +11,10 @@ import type { Audience, TicketStatus } from "@/lib/types";
 const TONE: Record<TicketStatus, SignalTone> = {
   OPEN: "neutral",
   IN_PROGRESS: "neutral",
+  // Muted, not a signalling colour: paused is the absence of a running
+  // clock, not a health verdict. Green would say "healthy" about a ticket
+  // nobody is working.
+  PENDING_CUSTOMER: "neutral",
   RESOLVED: "on-track",
   CLOSED: "neutral",
 };

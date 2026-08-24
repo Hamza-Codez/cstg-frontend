@@ -107,7 +107,8 @@ export default async function RequestsPage({
                         breached={ticket.sla_breached_at !== null && !settled}
                       />
                       <SlaCountdown
-                        deadline={ticket.deadline}
+                        dueAt={ticket.sla_due_at}
+                        status={ticket.status}
                         createdAt={ticket.created_at}
                         audience="customer"
                         settled={settled}

@@ -54,7 +54,8 @@ export function NeedsAttention({ tickets }: { tickets: TicketResponse[] }) {
                     counting on terminal tickets — none of which a local helper did. */}
                 <div className="ml-4 shrink-0">
                   <SlaCountdown
-                    deadline={t.deadline}
+                    dueAt={t.sla_due_at}
+                        status={t.status}
                     createdAt={t.created_at}
                     audience="staff"
                     settled={t.status === "RESOLVED" || t.status === "CLOSED"}

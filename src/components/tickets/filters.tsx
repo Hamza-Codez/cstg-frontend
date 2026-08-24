@@ -190,7 +190,7 @@ function SearchField({
 
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[13px] text-text">Search</span>
+      <span className="text-[13px] font-medium text-structure">Search</span>
       <input
         type="search"
         value={value}
@@ -203,7 +203,7 @@ function SearchField({
             submitNow();
           }
         }}
-        className="rounded-sm border border-border bg-surface px-3 py-2 text-sm text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
+        className="rounded-sm border border-structure bg-surface px-3 py-2 text-sm text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
       />
     </label>
   );

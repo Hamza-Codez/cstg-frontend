@@ -57,7 +57,8 @@ export function TicketTable({
               </Td>
               <Td>
                 <SlaCountdown
-                  deadline={ticket.deadline}
+                  dueAt={ticket.sla_due_at}
+                        status={ticket.status}
                   createdAt={ticket.created_at}
                   audience="staff"
                   settled={settled}

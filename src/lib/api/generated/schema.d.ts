@@ -692,6 +692,19 @@ export interface components {
              * Format: date-time
              */
             deadline: string;
+            /**
+             * Sla Due At
+             * Format: date-time
+             */
+            sla_due_at: string;
+            /** Sla Paused At */
+            sla_paused_at: string | null;
+            /** Sla Paused Seconds */
+            sla_paused_seconds: number;
+            /** Reopen Count */
+            reopen_count: number;
+            /** Resolved At */
+            resolved_at: string | null;
             /** Escalation Level */
             escalation_level: number;
             /** Sla Breached At */
@@ -773,6 +786,19 @@ export interface components {
              * Format: date-time
              */
             deadline: string;
+            /**
+             * Sla Due At
+             * Format: date-time
+             */
+            sla_due_at: string;
+            /** Sla Paused At */
+            sla_paused_at: string | null;
+            /** Sla Paused Seconds */
+            sla_paused_seconds: number;
+            /** Reopen Count */
+            reopen_count: number;
+            /** Resolved At */
+            resolved_at: string | null;
             /** Escalation Level */
             escalation_level: number;
             /** Sla Breached At */
@@ -787,7 +813,7 @@ export interface components {
          * TicketStatus
          * @enum {string}
          */
-        TicketStatus: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+        TicketStatus: "OPEN" | "IN_PROGRESS" | "PENDING_CUSTOMER" | "RESOLVED" | "CLOSED";
         /** TokenResponse */
         TokenResponse: {
             /** Access Token */

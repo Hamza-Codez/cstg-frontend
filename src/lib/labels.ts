@@ -20,6 +20,10 @@ import type {
 const STATUS: Record<TicketStatus, Record<Audience, string>> = {
   OPEN: { customer: "Received", staff: "Open" },
   IN_PROGRESS: { customer: "In progress", staff: "In progress" },
+  // The customer wording is a direct request for action. "Pending customer"
+  // describes the ticket from the desk's side; the customer needs to know
+  // that *they* are the blocker (spec05 frontend §3).
+  PENDING_CUSTOMER: { customer: "Waiting for your reply", staff: "Waiting on customer" },
   RESOLVED: { customer: "Resolved", staff: "Resolved" },
   CLOSED: { customer: "Closed", staff: "Closed" },
 };
@@ -78,6 +82,9 @@ export const ACTIONS = {
   addInternalNote: "Add internal note",
   start: "Start working",
   resolve: "Resolve",
+  waitForCustomer: "Wait for customer",
+  resumeWork: "Resume work",
+  reopen: "Reopen",
   close: "Close",
   assign: "Assign",
   reassign: "Reassign",
