@@ -10,6 +10,12 @@ import type { Category } from "@/lib/types";
 export interface NewRequestState {
   error?: string;
   fieldErrors?: { subject?: string; body?: string };
+  /**
+   * Set once the ticket exists. The action deliberately does **not** redirect:
+   * queued attachments can only be uploaded after the ticket has an id
+   * (spec03 §4), so the client uploads and then navigates.
+   */
+  ticketId?: string;
 }
 
 /** Mirrors the backend's TicketCreate bounds for fast feedback; server is authority. */
@@ -44,6 +50,7 @@ export async function createRequestAction(
   }
 
   revalidatePath("/requests");
-  // Straight to the new request so the flow confirms inline, never a dead end (§7.1.4).
-  redirect(`/requests/${result.data.id}`);
+  // The client navigates once uploads finish — still straight to the new
+  // request, never a dead end (§7.1.4).
+  return { ticketId: result.data.id };
 }

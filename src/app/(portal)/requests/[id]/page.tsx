@@ -2,11 +2,14 @@ import { MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { AttachmentList } from "@/components/attachments/attachment-list";
+import { AttachmentUpload } from "@/components/attachments/attachment-upload";
 import { CommentComposer } from "@/components/comments/comment-composer";
 import { Timeline } from "@/components/comments/timeline";
 import { SlaCountdown } from "@/components/sla/sla-countdown";
 import { StatusBadge } from "@/components/tickets/status-badge";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { listAttachments } from "@/lib/api/attachments";
 import { getTicket, listComments } from "@/lib/api/tickets";
 import { getSession } from "@/lib/auth/session";
 import { categoryLabel, term } from "@/lib/labels";
@@ -16,17 +19,24 @@ export const metadata = { title: "Request · Support Engine" };
 
 export default async function RequestDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ attachmentsFailed?: string }>;
 }) {
   const { id } = await params;
+  // Set by the new-request flow when the ticket was created but a file was not
+  // attached (spec03 §4). The ticket still exists — say so plainly and point at
+  // the fix rather than failing the whole flow.
+  const failedUploads = Number((await searchParams).attachmentsFailed ?? 0);
   const session = await getSession();
   if (!session) redirect("/sign-in");
 
   // Both requests go out together; the backend scopes each one independently.
-  const [result, comments] = await Promise.all([
+  const [result, comments, attachments] = await Promise.all([
     getTicket(session.token, id),
     listComments(session.token, id),
+    listAttachments(session.token, id),
   ]);
   if (!result.ok) {
     if (result.error.code === "UNAUTHENTICATED") redirect("/sign-out");
@@ -111,6 +121,27 @@ export default async function RequestDetailPage({
             </ul>
           )}
           {!settled && <CommentComposer ticketId={ticket.id} audience="customer" />}
+        </CardBody>
+      </Card>
+
+      {failedUploads > 0 && (
+        <p role="alert" className="rounded-sm border border-at-risk bg-surface px-3 py-2 text-sm text-text">
+          Request sent. {failedUploads === 1 ? "1 file" : `${failedUploads} files`} couldn&apos;t be
+          attached — you can add {failedUploads === 1 ? "it" : "them"} below.
+        </p>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Files</CardTitle>
+        </CardHeader>
+        <CardBody className="flex flex-col gap-3">
+          <AttachmentList
+            ticketId={ticket.id}
+            attachments={attachments.ok ? attachments.data.items : []}
+          />
+          {/* Closed requests take nothing new, matching the reply composer. */}
+          {ticket.status !== "CLOSED" && <AttachmentUpload ticketId={ticket.id} />}
         </CardBody>
       </Card>
 

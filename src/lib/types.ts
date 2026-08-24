@@ -25,6 +25,7 @@ export type CustomerTier = Schemas["CustomerTier"];
 export type TicketDetailResponse = Schemas["TicketDetailResponse"];
 export type PaginatedTicketResponse = Schemas["PaginatedTicketResponse"];
 export type CommentResponse = Schemas["CommentResponse"];
+export type AttachmentResponse = Schemas["AttachmentResponse"];
 export type TicketEventResponse = Schemas["TicketEventResponse"];
 export type AssigneeSummary = Schemas["AssigneeSummary"];
 export type UserSummary = Schemas["UserSummary"];

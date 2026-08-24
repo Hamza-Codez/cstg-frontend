@@ -2,6 +2,8 @@ import { MessageSquare, StickyNote } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { AttachmentList } from "@/components/attachments/attachment-list";
+import { AttachmentUpload } from "@/components/attachments/attachment-upload";
 import { CommentComposer } from "@/components/comments/comment-composer";
 import { Timeline } from "@/components/comments/timeline";
 import { AssignDialog } from "@/components/forms/assign-dialog";
@@ -10,6 +12,7 @@ import { ActionPanel } from "@/components/tickets/action-panel";
 import { PriorityBadge } from "@/components/tickets/priority-badge";
 import { StatusBadge } from "@/components/tickets/status-badge";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { listAttachments } from "@/lib/api/attachments";
 import { getTicket, listActiveAgents, listComments } from "@/lib/api/tickets";
 import { getSession } from "@/lib/auth/session";
 import { formatDateTime } from "@/lib/format";
@@ -30,10 +33,11 @@ export default async function StaffTicketPage({
   // visibility on every one of them — so a request the caller may not see returns
   // its own 404 rather than leaking through this parallelism.
   const canAssign = session.role === "DISPATCHER" || session.role === "ADMIN";
-  const [result, comments, agentsResult] = await Promise.all([
+  const [result, comments, agentsResult, attachments] = await Promise.all([
     getTicket(session.token, id),
     listComments(session.token, id),
     canAssign ? listActiveAgents(session.token) : Promise.resolve(null),
+    listAttachments(session.token, id),
   ]);
   if (!result.ok) {
     if (result.error.code === "UNAUTHENTICATED") redirect("/sign-out");
@@ -136,6 +140,19 @@ export default async function StaffTicketPage({
                 </ul>
               )}
               {!settled && <CommentComposer ticketId={ticket.id} audience="staff" />}
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Files</CardTitle>
+            </CardHeader>
+            <CardBody className="flex flex-col gap-3">
+              <AttachmentList
+                ticketId={ticket.id}
+                attachments={attachments.ok ? attachments.data.items : []}
+              />
+              {ticket.status !== "CLOSED" && <AttachmentUpload ticketId={ticket.id} />}
             </CardBody>
           </Card>
 
