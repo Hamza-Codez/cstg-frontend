@@ -30,10 +30,13 @@ function messageFor(code: string, fallback: string): string {
   }
 }
 
+import { assertSameOrigin } from "@/lib/auth/csrf";
+
 export async function transitionAction(
   _previous: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await assertSameOrigin();
   const session = await getSession();
   if (!session) redirect("/sign-in");
 
@@ -54,6 +57,7 @@ export async function assignAction(
   _previous: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await assertSameOrigin();
   const session = await getSession();
   if (!session) redirect("/sign-in");
 
@@ -77,6 +81,7 @@ export async function commentAction(
   _previous: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await assertSameOrigin();
   const session = await getSession();
   if (!session) redirect("/sign-in");
 

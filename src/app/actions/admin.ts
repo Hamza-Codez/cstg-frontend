@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { apiFetch } from "@/lib/api/client";
 import { replacePriorityRules } from "@/lib/api/admin";
+import { assertSameOrigin } from "@/lib/auth/csrf";
 import { getSession } from "@/lib/auth/session";
 import type { Category, CustomerTier, Priority, PriorityRuleEntry, Role } from "@/lib/types";
 
@@ -17,6 +18,7 @@ export async function createStaffAction(
   _previous: AdminState,
   formData: FormData,
 ): Promise<AdminState> {
+  await assertSameOrigin();
   const session = await getSession();
   if (!session) redirect("/sign-in");
 
@@ -50,6 +52,7 @@ export async function setStaffActiveAction(
   _previous: AdminState,
   formData: FormData,
 ): Promise<AdminState> {
+  await assertSameOrigin();
   const session = await getSession();
   if (!session) redirect("/sign-in");
 
@@ -71,6 +74,7 @@ export async function savePriorityMatrixAction(
   _previous: AdminState,
   formData: FormData,
 ): Promise<AdminState> {
+  await assertSameOrigin();
   const session = await getSession();
   if (!session) redirect("/sign-in");
 

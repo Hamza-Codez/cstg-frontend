@@ -16,10 +16,13 @@ export interface NewRequestState {
 const SUBJECT_MAX = 200;
 const BODY_MAX = 10000;
 
+import { assertSameOrigin } from "@/lib/auth/csrf";
+
 export async function createRequestAction(
   _previous: NewRequestState,
   formData: FormData,
 ): Promise<NewRequestState> {
+  await assertSameOrigin();
   const session = await getSession();
   if (!session) redirect("/sign-in");
 

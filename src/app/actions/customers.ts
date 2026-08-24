@@ -13,10 +13,13 @@ export interface SignUpState {
 
 const MIN_PASSWORD = 8;
 
+import { assertSameOrigin } from "@/lib/auth/csrf";
+
 export async function signUpAction(
   _previous: SignUpState,
   formData: FormData,
 ): Promise<SignUpState> {
+  await assertSameOrigin();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const name = String(formData.get("name") ?? "").trim();
