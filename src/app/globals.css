@@ -47,7 +47,7 @@
 
 @layer utilities {
   .bg-gradient-primary {
-    background: #2487b5;
-    background: linear-gradient(323deg, rgba(36, 135, 181, 1) 0%, rgba(3, 70, 133, 1) 100%);
+    background: #040223;
+    background: linear-gradient(172deg, rgba(151, 150, 150, 0.536) 0%, rgba(137, 137, 138, 0.651) 100%);
   }
 }
