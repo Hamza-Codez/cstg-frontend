@@ -1,0 +1,195 @@
+import { MessageSquare, StickyNote } from "lucide-react";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+
+import { CommentComposer } from "@/components/comments/comment-composer";
+import { Timeline } from "@/components/comments/timeline";
+import { AssignDialog } from "@/components/forms/assign-dialog";
+import { SlaCountdown } from "@/components/sla/sla-countdown";
+import { ActionPanel } from "@/components/tickets/action-panel";
+import { PriorityBadge } from "@/components/tickets/priority-badge";
+import { StatusBadge } from "@/components/tickets/status-badge";
+import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { getTicket, listActiveAgents, listComments } from "@/lib/api/tickets";
+import { getSession } from "@/lib/auth/session";
+import { formatDateTime } from "@/lib/format";
+import { categoryLabel, commentTypeLabel, term } from "@/lib/labels";
+
+export const metadata = { title: "Ticket · Support Engine" };
+
+export default async function StaffTicketPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const session = await getSession();
+  if (!session) redirect("/sign-in");
+
+  // Fired together, not in sequence. Each is independent, and the API decides
+  // visibility on every one of them — so a request the caller may not see returns
+  // its own 404 rather than leaking through this parallelism.
+  const canAssign = session.role === "DISPATCHER" || session.role === "ADMIN";
+  const [result, comments, agentsResult] = await Promise.all([
+    getTicket(session.token, id),
+    listComments(session.token, id),
+    canAssign ? listActiveAgents(session.token) : Promise.resolve(null),
+  ]);
+  if (!result.ok) {
+    if (result.error.code === "UNAUTHENTICATED") redirect("/sign-out");
+    if (result.error.code === "NOT_FOUND" || result.error.code === "FORBIDDEN") notFound();
+    return (
+      <Card>
+        <CardBody>
+          <p className="text-sm text-overdue">Something went wrong on our end. Try again.</p>
+        </CardBody>
+      </Card>
+    );
+  }
+
+  const ticket = result.data;
+  const settled = ticket.status === "RESOLVED" || ticket.status === "CLOSED";
+
+  const notes = comments.ok ? comments.data.items : [];
+  // Agents are not offered the staff directory (they cannot reassign), so the
+  // request is skipped rather than 403'd.
+  const agents = agentsResult?.ok ? agentsResult.data.items : [];
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Link href="/queue" className="cursor-pointer text-sm text-structure hover:underline">
+        ← Back to queue
+      </Link>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{ticket.subject}</CardTitle>
+          <SlaCountdown
+            deadline={ticket.deadline}
+            createdAt={ticket.created_at}
+            audience="staff"
+            settled={settled}
+          />
+        </CardHeader>
+        <CardBody className="flex flex-wrap items-center gap-3">
+          <StatusBadge
+            status={ticket.status}
+            audience="staff"
+            breached={ticket.sla_breached_at !== null && !settled}
+          />
+          <PriorityBadge priority={ticket.priority} />
+          {ticket.escalation_level > 0 && (
+            <span className="text-xs text-at-risk">Escalated</span>
+          )}
+        </CardBody>
+      </Card>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="flex flex-col gap-4 md:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Request</CardTitle>
+            </CardHeader>
+            <CardBody>
+              <p className="whitespace-pre-wrap text-sm text-text">{ticket.body}</p>
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Conversation</CardTitle>
+            </CardHeader>
+            <CardBody className="flex flex-col gap-4">
+              {notes.length === 0 ? (
+                <p className="text-sm text-text/60">Nothing has been sent yet.</p>
+              ) : (
+                <ul className="flex flex-col gap-3">
+                  {notes.map((note) => {
+                    const isInternal = note.type === "INTERNAL_NOTE";
+                    return (
+                      <li
+                        key={note.id}
+                        className={
+                          isInternal
+                            ? "border-l-4 border-l-at-risk bg-canvas px-3 py-2"
+                            : "border-l-4 border-l-border px-3 py-2"
+                        }
+                      >
+                        <span className="flex items-center gap-2 text-xs text-text/60">
+                          {isInternal ? (
+                            <StickyNote aria-hidden className="size-3.5" strokeWidth={1.5} />
+                          ) : (
+                            <MessageSquare aria-hidden className="size-3.5" strokeWidth={1.5} />
+                          )}
+                          {commentTypeLabel(note.type)} · {formatDateTime(note.created_at)}
+                        </span>
+                        <p className="whitespace-pre-wrap text-sm text-text">{note.body}</p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              {!settled && <CommentComposer ticketId={ticket.id} />}
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{term("activity", "staff")}</CardTitle>
+            </CardHeader>
+            <CardBody>
+              <Timeline events={ticket.timeline ?? []} audience="staff" />
+            </CardBody>
+          </Card>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Actions</CardTitle>
+            </CardHeader>
+            <CardBody className="flex flex-col gap-3">
+              <ActionPanel
+                ticketId={ticket.id}
+                status={ticket.status}
+                role={session.role}
+                hasAssignee={ticket.assignee != null}
+                isAssignedToMe={ticket.assignee?.id === session.principalId}
+              />
+              {canAssign && !settled && (
+                <AssignDialog
+                  ticketId={ticket.id}
+                  agents={agents}
+                  currentAssigneeId={ticket.assignee?.id ?? null}
+                />
+              )}
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Properties</CardTitle>
+            </CardHeader>
+            <CardBody>
+              <dl className="flex flex-col gap-2 text-xs">
+                <Row label={term("assignee", "staff")} value={ticket.assignee?.name ?? "Unassigned"} />
+                <Row label="Category" value={categoryLabel(ticket.category)} />
+                <Row label="Created" value={formatDateTime(ticket.created_at)} />
+                <Row label={term("deadline", "staff")} value={formatDateTime(ticket.deadline)} />
+              </dl>
+            </CardBody>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-4">
+      <dt className="text-text/60">{label}</dt>
+      <dd className="text-right text-text">{value}</dd>
+    </div>
+  );
+}

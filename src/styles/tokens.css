@@ -1,0 +1,99 @@
+/* Design tokens — the single home for every colour, radius, and spacing value.
+ * Components reference these through Tailwind classes (see tailwind.config.ts);
+ * a hex literal must never appear in JSX.
+ *
+ * The palette here and docs/UIUX_FRONTEND.md §2.1 are kept in step; §2.1 records
+ * the verified contrast ratios, including the one that inverts: white on the gold
+ * accent fails, so text on the accent uses the dark ink.
+ */
+
+:root {
+  /* ── Brand palette, 60-30-10 ─────────────────────────────────────────────── */
+  --color-canvas: #e8edf2; /* 60% — page background, the ambient field */
+  --color-surface: #ffffff; /* card bodies, form fields */
+  --color-structure: #547a95; /* 30% — card header strips, table heads */
+  --color-accent: #c2a56d; /* 10% — primary CTA and affordances ONLY, never status */
+  --color-accent-hover: #a98b52;
+
+  --color-text: #2c3947; /* body text: 10.0:1 on canvas, 11.8:1 on white */
+  --color-text-inverse: #ffffff; /* text on structure/header fills */
+  /* White on the gold accent is 2.36:1 — unreadable. Text sitting ON the accent
+   * uses the dark ink instead (4.99:1, passes AA). */
+  --color-text-on-accent: #2c3947;
+  --color-border: #cfd8e1;
+
+  /* ── Chrome ──────────────────────────────────────────────────────────────── */
+  --color-header: #2c3947; /* dark bar; white on it is 11.8:1 */
+  --color-header-alt: #3d5064; /* the lighter stop of the chrome gradients */
+  --gradient-header: linear-gradient(90deg, #2c3947 0%, #3d5064 100%);
+  --gradient-sidebar: linear-gradient(180deg, #2c3947 0%, #40596f 55%, #547a95 100%);
+  --gradient-accent: linear-gradient(90deg, #c2a56d 0%, #d8bd8b 100%);
+  --gradient-structure: linear-gradient(90deg, #547a95 0%, #7a9db8 100%);
+
+  /* ── Functional signalling ───────────────────────────────────────────────── */
+  /* Indicator-only: dots, thin bars, badge text. Never fills, never large areas. */
+  --color-on-track: #2e7d32;
+  --color-at-risk: #b7791f;
+  --color-overdue: #c0392b;
+
+  /* ── Chart series ────────────────────────────────────────────────────────── */
+  /* Categorical — identity, not magnitude. Assigned in fixed order, never cycled.
+   * Validated against the #e8edf2 surface: chroma floor, adjacent-pair CVD
+   * separation (worst ΔE 9.0 protan), normal-vision floor (22.6), and all four
+   * at or above 3:1 contrast. Deliberately separate from the accent, which stays
+   * CTA-only, and from the signalling colours above, which stay reserved. */
+  --chart-1: #1d6fb8;
+  --chart-2: #c4611f;
+  --chart-3: #10876a;
+  --chart-4: #8a4fb0;
+
+  /* Sequential — priority IS ordered, so it gets one hue stepped light→dark
+   * rather than four unrelated hues. Relative luminance is monotonic:
+   * 0.507 → 0.317 → 0.179 → 0.079. */
+  --chart-seq-1: #a8c0d2; /* Low */
+  --chart-seq-2: #7a9db8; /* Medium */
+  --chart-seq-3: #4e7a9b; /* High */
+  --chart-seq-4: #2c536f; /* Critical */
+
+  /* Recessive chart furniture — grid and axes must not compete with the marks. */
+  --chart-grid: #dbe3ea;
+
+  /* ── Radius ──────────────────────────────────────────────────────────────── */
+  /* sm/md carry the operational surfaces (badges, cards, inputs, buttons).
+   * lg/xl/full are for expressive chrome — brand marks, the sign-in artwork,
+   * pill indicators — where a softer shape is wanted. */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* ── Spacing, 4px base ───────────────────────────────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* ── App background ──────────────────────────────────────────────────────── */
+  /* The page ground behind the shell. Distinct from --color-canvas, which is the
+   * content field inside it. */
+  --color-app-bg: #fafafa;
+  --gradient-app: linear-gradient(to bottom right, #fafafa, #45454c7d);
+
+  /* ── Layout ──────────────────────────────────────────────────────────────── */
+  --content-max-width: 1200px;
+
+  /* ── Motion — functional only ────────────────────────────────────────────── */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+  }
+}
