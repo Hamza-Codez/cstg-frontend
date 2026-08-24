@@ -2,6 +2,7 @@ import { MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { CommentComposer } from "@/components/comments/comment-composer";
 import { Timeline } from "@/components/comments/timeline";
 import { SlaCountdown } from "@/components/sla/sla-countdown";
 import { StatusBadge } from "@/components/tickets/status-badge";
@@ -87,24 +88,29 @@ export default async function RequestDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Messages from support</CardTitle>
+          <CardTitle>Conversation</CardTitle>
         </CardHeader>
-        <CardBody>
+        <CardBody className="flex flex-col gap-4">
           {replies.length === 0 ? (
             <p className="text-sm text-text/60">No replies yet. We&apos;ll be in touch here.</p>
           ) : (
             <ul className="flex flex-col gap-4">
               {replies.map((reply) => (
                 <li key={reply.id} className="flex flex-col gap-1">
-                  <span className="flex items-center gap-2 text-xs text-text/60">
-                    <MessageSquare aria-hidden className="size-3.5" strokeWidth={1.5} />
-                    {formatDateTime(reply.created_at)}
-                  </span>
-                  <p className="whitespace-pre-wrap text-sm text-text">{reply.body}</p>
+                  <div className="flex items-center justify-between text-xs text-text/60">
+                    <span className="flex items-center gap-2">
+                      <MessageSquare aria-hidden className="size-3.5" strokeWidth={1.5} />
+                      {reply.author.name}
+                      {reply.author.type === "USER" && " (Support)"}
+                    </span>
+                    <span>{formatDateTime(reply.created_at)}</span>
+                  </div>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-text">{reply.body}</p>
                 </li>
               ))}
             </ul>
           )}
+          {!settled && <CommentComposer ticketId={ticket.id} audience="customer" />}
         </CardBody>
       </Card>
 

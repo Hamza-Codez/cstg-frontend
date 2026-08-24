@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/health/db": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Db Health */
+        get: operations["db_health_health_db_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -350,6 +367,18 @@ export interface components {
          * @enum {string}
          */
         Category: "OUTAGE" | "BILLING" | "TECHNICAL" | "GENERAL";
+        /** CommentAuthor */
+        CommentAuthor: {
+            /** Type */
+            type: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
         /** CommentCreate */
         CommentCreate: {
             type: components["schemas"]["CommentType"];
@@ -368,11 +397,7 @@ export interface components {
              * Format: uuid
              */
             ticket_id: string;
-            /**
-             * Author Id
-             * Format: uuid
-             */
-            author_id: string;
+            author: components["schemas"]["CommentAuthor"];
             type: components["schemas"]["CommentType"];
             /** Body */
             body: string;
@@ -439,6 +464,19 @@ export interface components {
          * @enum {string}
          */
         CustomerTier: "ENTERPRISE" | "BUSINESS" | "FREE";
+        /** DbHealthResponse */
+        DbHealthResponse: {
+            /**
+             * Status
+             * @constant
+             */
+            status: "ok";
+            /**
+             * Database
+             * @constant
+             */
+            database: "reachable";
+        };
         /**
          * EventType
          * @enum {string}
@@ -772,6 +810,26 @@ export interface operations {
             };
         };
     };
+    db_health_health_db_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DbHealthResponse"];
+                };
+            };
+        };
+    };
     login_api_v1_auth_login_post: {
         parameters: {
             query?: never;
@@ -877,7 +935,9 @@ export interface operations {
     create_ticket_api_v1_tickets_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };

@@ -96,5 +96,6 @@ export async function commentAction(
   }
 
   revalidatePath(`/tickets/${ticketId}`);
+  revalidatePath(`/requests/${ticketId}`);
   return { ok: true };
 }

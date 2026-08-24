@@ -16,9 +16,9 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
 import { ACTIONS } from "@/lib/labels";
-import type { CommentType } from "@/lib/types";
+import type { Audience, CommentType } from "@/lib/types";
 
-export function CommentComposer({ ticketId }: { ticketId: string }) {
+export function CommentComposer({ ticketId, audience }: { ticketId: string; audience: Audience }) {
   const [type, setType] = useState<CommentType>("PUBLIC_REPLY");
   const [state, formAction, pending] = useActionState<ActionState, FormData>(commentAction, {});
   const { show } = useToast();
@@ -35,40 +35,48 @@ export function CommentComposer({ ticketId }: { ticketId: string }) {
       <input type="hidden" name="ticket_id" value={ticketId} />
       <input type="hidden" name="type" value={type} />
 
-      <div role="group" aria-label="Who sees this" className="flex gap-2">
-        <ToggleButton
-          active={!internal}
-          onClick={() => setType("PUBLIC_REPLY")}
-          icon={<MessageSquare aria-hidden className="size-4" strokeWidth={1.5} />}
-          label="Reply to customer"
-        />
-        <ToggleButton
-          active={internal}
-          onClick={() => setType("INTERNAL_NOTE")}
-          icon={<StickyNote aria-hidden className="size-4" strokeWidth={1.5} />}
-          label="Internal note"
-        />
-      </div>
+      {audience === "staff" && (
+        <div role="group" aria-label="Who sees this" className="flex gap-2">
+          <ToggleButton
+            active={!internal}
+            onClick={() => setType("PUBLIC_REPLY")}
+            icon={<MessageSquare aria-hidden className="size-4" strokeWidth={1.5} />}
+            label="Reply to customer"
+          />
+          <ToggleButton
+            active={internal}
+            onClick={() => setType("INTERNAL_NOTE")}
+            icon={<StickyNote aria-hidden className="size-4" strokeWidth={1.5} />}
+            label="Internal note"
+          />
+        </div>
+      )}
 
       <textarea
         name="body"
         required
         rows={4}
-        aria-label={internal ? "Internal note" : "Reply to customer"}
+        aria-label={
+          audience === "customer" ? "Reply" : internal ? "Internal note" : "Reply to customer"
+        }
         placeholder={
-          internal ? "Only staff will see this." : "The customer will see this reply."
+          audience === "customer"
+            ? "Write a reply..."
+            : internal
+              ? "Only staff will see this."
+              : "The customer will see this reply."
         }
         className={cn(
           "rounded-md border bg-surface px-3 py-2 text-sm text-text",
           "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent",
           // Internal notes carry a gold left border so the audience is legible
           // at a glance, not just from the toggle (§5).
-          internal ? "border-border border-l-4 border-l-at-risk" : "border-border",
+          internal && audience === "staff" ? "border-border border-l-4 border-l-at-risk" : "border-border",
         )}
       />
 
       <Button type="submit" variant="primary" disabled={pending}>
-        {internal ? ACTIONS.addInternalNote : ACTIONS.reply}
+        {audience === "customer" ? "Send reply" : internal ? ACTIONS.addInternalNote : ACTIONS.reply}
       </Button>
     </form>
   );

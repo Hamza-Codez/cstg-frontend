@@ -115,21 +115,27 @@ export default async function StaffTicketPage({
                             : "border-l-4 border-l-border px-3 py-2"
                         }
                       >
-                        <span className="flex items-center gap-2 text-xs text-text/60">
-                          {isInternal ? (
-                            <StickyNote aria-hidden className="size-3.5" strokeWidth={1.5} />
-                          ) : (
-                            <MessageSquare aria-hidden className="size-3.5" strokeWidth={1.5} />
-                          )}
-                          {commentTypeLabel(note.type)} · {formatDateTime(note.created_at)}
-                        </span>
-                        <p className="whitespace-pre-wrap text-sm text-text">{note.body}</p>
+                        <div className="flex items-center justify-between text-xs text-text/60">
+                          <span className="flex items-center gap-2">
+                            {isInternal ? (
+                              <StickyNote aria-hidden className="size-3.5" strokeWidth={1.5} />
+                            ) : (
+                              <MessageSquare aria-hidden className="size-3.5" strokeWidth={1.5} />
+                            )}
+                            {note.author.name}
+                            {note.author.type === "CUSTOMER" && " (Customer)"}
+                          </span>
+                          <span>
+                            {commentTypeLabel(note.type)} · {formatDateTime(note.created_at)}
+                          </span>
+                        </div>
+                        <p className="mt-1 whitespace-pre-wrap text-sm text-text">{note.body}</p>
                       </li>
                     );
                   })}
                 </ul>
               )}
-              {!settled && <CommentComposer ticketId={ticket.id} />}
+              {!settled && <CommentComposer ticketId={ticket.id} audience="staff" />}
             </CardBody>
           </Card>
 
