@@ -30,7 +30,7 @@ export function TableHead({ children }: { children: ReactNode }) {
 }
 
 export function Th({ children }: { children: ReactNode }) {
-  return <th scope="col" className="px-4 py-2 text-xs font-medium">{children}</th>;
+  return <th scope="col" className="px-4 py-[7px] text-[13px] font-medium">{children}</th>;
 }
 
 export function TableBody({ children }: { children: ReactNode }) {
@@ -52,5 +52,5 @@ export function Tr({ children, onClick }: { children: ReactNode; onClick?: () =>
 }
 
 export function Td({ children, className }: { children: ReactNode; className?: string }) {
-  return <td className={cn("px-4 py-0.5 text-text", className)}>{children}</td>;
+  return <td className={cn("px-4 py-[7px] text-text", className)}>{children}</td>;
 }

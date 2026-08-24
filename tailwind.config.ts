@@ -41,6 +41,17 @@ const config: Config = {
       "chart-seq-3": "var(--chart-seq-3)",
       "chart-seq-4": "var(--chart-seq-4)",
       "chart-grid": "var(--chart-grid)",
+      // Solid control fills (dark neutral / dark danger) + the ink on the
+      // muted gradient. Never status, never the accent.
+      control: "var(--color-control)",
+      "control-hover": "var(--color-control-hover)",
+      "control-border": "var(--color-control-border)",
+      "control-border-hover": "var(--color-control-border-hover)",
+      "control-ink": "var(--color-control-ink)",
+      "danger-solid": "var(--color-danger-solid)",
+      "danger-solid-hover": "var(--color-danger-solid-hover)",
+      "danger-solid-border": "var(--color-danger-solid-border)",
+      "danger-solid-border-hover": "var(--color-danger-solid-border-hover)",
     },
     borderRadius: {
       none: "0",
@@ -64,6 +75,7 @@ const config: Config = {
         "gradient-accent": "var(--gradient-accent)",
         "gradient-structure": "var(--gradient-structure)",
         "gradient-muted": "var(--gradient-muted)",
+        "gradient-muted-hover": "var(--gradient-muted-hover)",
       },
       spacing: {
         1: "var(--space-1)",

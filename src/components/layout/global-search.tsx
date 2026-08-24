@@ -42,7 +42,7 @@ export function GlobalSearch({
           it (§2.1). The muted gradient carries the dark ink at 10.0:1. */}
       <button
         type="submit"
-        className="cursor-pointer rounded-sm border border-border bg-gradient-muted bg-canvas px-3 py-1.5 text-sm font-medium text-text hover:bg-border focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="cursor-pointer rounded-sm border border-border bg-gradient-muted px-3 py-1.5 text-sm font-medium text-control-ink hover:bg-gradient-muted-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         Go
       </button>

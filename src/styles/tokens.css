@@ -31,7 +31,25 @@
   --gradient-structure: linear-gradient(90deg, #547a95 0%, #7a9db8 100%);
   /* Neutral chrome control on a dark bar — canvas stepped into border, both
    * existing palette values. Carries the dark ink (10.0:1), never white. */
-  --gradient-muted: linear-gradient(180deg, #e8edf2 0%, #cfd8e1 100%);
+  --gradient-muted: linear-gradient(to bottom right, #f4f4f5, #e5e7eb);
+  --gradient-muted-hover: linear-gradient(to bottom right, #e4e4e7, #d1d5db);
+  /* Ink carried ON the muted gradient — 15.2:1, never white. */
+  --color-control-ink: #27272a;
+
+  /* ── Solid controls ──────────────────────────────────────────────────────
+   * Dark neutral and dark danger fills for secondary actions in dense views
+   * (table row actions, staff activate/deactivate). Distinct from the accent,
+   * which stays reserved for the single primary action in a view (§2.1).
+   * Both carry white text: 14.1:1 and 10.3:1. */
+  --color-control: #1e293b;
+  --color-control-hover: #334155;
+  --color-control-border: #334155;
+  --color-control-border-hover: #475569;
+
+  --color-danger-solid: #7f1d1d;
+  --color-danger-solid-hover: #991b1b;
+  --color-danger-solid-border: #991b1b;
+  --color-danger-solid-border-hover: #b91c1c;
 
   /* ── Functional signalling ───────────────────────────────────────────────── */
   /* Indicator-only: dots, thin bars, badge text. Never fills, never large areas. */

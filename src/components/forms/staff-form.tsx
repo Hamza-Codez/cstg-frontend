@@ -78,7 +78,12 @@ export function ActiveToggle({
     <form action={formAction}>
       <input type="hidden" name="user_id" value={userId} />
       <input type="hidden" name="is_active" value={String(!isActive)} />
-      <Button type="submit" variant={isActive ? "danger" : "secondary"} disabled={pending}>
+      <Button
+        type="submit"
+        disabled={pending}
+        variant={isActive ? "danger" : "neutral"}
+        className="text-sm"
+      >
         {isActive ? "Deactivate" : "Activate"}
       </Button>
     </form>

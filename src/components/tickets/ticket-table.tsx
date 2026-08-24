@@ -67,7 +67,7 @@ export function TicketTable({
               <Td>
                 <Link
                   href={`/tickets/${ticket.id}`}
-                  className={buttonVariants({ variant: "secondary" })}
+                  className={buttonVariants({ variant: "neutral", className: "text-sm" })}
                 >
                   View
                 </Link>
