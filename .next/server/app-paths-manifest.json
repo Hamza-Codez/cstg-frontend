@@ -1,7 +1,0 @@
-{
-  "/(staff)/tickets/page": "app/(staff)/tickets/page.js",
-  "/(staff)/queue/page": "app/(staff)/queue/page.js",
-  "/(staff)/overdue/page": "app/(staff)/overdue/page.js",
-  "/(staff)/tickets/[id]/page": "app/(staff)/tickets/[id]/page.js",
-  "/(auth)/sign-in/page": "app/(auth)/sign-in/page.js"
-}
