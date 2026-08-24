@@ -87,7 +87,11 @@ export interface paths {
         };
         /**
          * List Tickets
-         * @description Role-scoped list with filters and keyset pagination (docs/API.md §1, §4).
+         * @description Role-scoped search, filters and keyset pagination (docs/API.md §1, §4).
+         *
+         *     Filters a principal may not use are refused 403 by the service — never
+         *     silently dropped, which would answer a different question than the one asked
+         *     (spec04 §4).
          */
         get: operations["list_tickets_api_v1_tickets_get"];
         put?: never;
@@ -311,6 +315,41 @@ export interface paths {
         put: operations["replace_priority_rules_api_v1_configuration_priority_rules_put"];
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/saved-views": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Saved Views */
+        get: operations["list_saved_views_api_v1_saved_views_get"];
+        put?: never;
+        /** Create Saved View */
+        post: operations["create_saved_view_api_v1_saved_views_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/saved-views/{view_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Saved View */
+        delete: operations["delete_saved_view_api_v1_saved_views__view_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -592,6 +631,28 @@ export interface components {
          * @enum {string}
          */
         Role: "CUSTOMER" | "AGENT" | "DISPATCHER" | "ADMIN";
+        /** SavedViewCreate */
+        SavedViewCreate: {
+            /** Name */
+            name: string;
+            filters: components["schemas"]["TicketFilters"];
+        };
+        /** SavedViewResponse */
+        SavedViewResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            filters: components["schemas"]["TicketFilters"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /**
          * SlaDurationEntry
          * @description Read-only in v1 — the durations are fixed in the domain (SLA_ENGINE.md §1).
@@ -668,6 +729,32 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /**
+         * TicketFilters
+         * @description Every filter the list endpoint accepts. All optional, all combinable.
+         */
+        TicketFilters: {
+            /** Q */
+            q?: string | null;
+            status?: components["schemas"]["TicketStatus"] | null;
+            priority?: components["schemas"]["Priority"] | null;
+            category?: components["schemas"]["Category"] | null;
+            /** Breached */
+            breached?: boolean | null;
+            /** Assigned */
+            assigned?: boolean | null;
+            /** Escalated */
+            escalated?: boolean | null;
+            tier?: components["schemas"]["CustomerTier"] | null;
+            /** Assignee Id */
+            assignee_id?: string | null;
+            /** Customer Id */
+            customer_id?: string | null;
+            /** Created After */
+            created_after?: string | null;
+            /** Created Before */
+            created_before?: string | null;
         };
         /** TicketResponse */
         TicketResponse: {
@@ -912,10 +999,18 @@ export interface operations {
     list_tickets_api_v1_tickets_get: {
         parameters: {
             query?: {
+                q?: string | null;
                 status?: components["schemas"]["TicketStatus"] | null;
                 priority?: components["schemas"]["Priority"] | null;
+                category?: components["schemas"]["Category"] | null;
                 breached?: boolean | null;
                 assigned?: boolean | null;
+                escalated?: boolean | null;
+                tier?: components["schemas"]["CustomerTier"] | null;
+                assignee_id?: string | null;
+                customer_id?: string | null;
+                created_after?: string | null;
+                created_before?: string | null;
                 limit?: number;
                 cursor?: string | null;
             };
@@ -1412,6 +1507,90 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ConfigurationResponse"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_saved_views_api_v1_saved_views_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["SavedViewResponse"][];
+                    };
+                };
+            };
+        };
+    };
+    create_saved_view_api_v1_saved_views_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavedViewCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedViewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_saved_view_api_v1_saved_views__view_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                view_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

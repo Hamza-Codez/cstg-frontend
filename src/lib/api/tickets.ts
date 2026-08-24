@@ -1,23 +1,20 @@
 /** Typed ticket calls (docs/API.md §4, §7). */
 
 import { apiFetch, type ApiResult } from "./client";
+import type { TicketFilterValues } from "@/lib/filters";
 import type {
   Category,
   CommentResponse,
   CommentType,
   PaginatedTicketResponse,
-  Priority,
   TicketDetailResponse,
   TicketResponse,
   TicketStatus,
   UserSummary,
 } from "@/lib/types";
 
-export interface TicketFilters {
-  status?: TicketStatus;
-  priority?: Priority;
-  breached?: boolean;
-  assigned?: boolean;
+/** Wire-level list params: the URL filters plus pagination. */
+export interface TicketFilters extends TicketFilterValues {
   limit?: number;
   cursor?: string;
 }

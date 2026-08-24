@@ -1,9 +1,18 @@
-import { QueueView } from "@/components/tickets/queue-view";
-import { loadQueue } from "@/lib/staff-queue";
+import { FilteredQueue } from "@/components/tickets/filtered-queue";
 
 export const metadata = { title: "Unassigned · Support Engine" };
 
-export default async function UnassignedPage() {
-  const { tickets, error } = await loadQueue({ assigned: false });
-  return <QueueView title="Unassigned" tickets={tickets} empty="Everything has an owner. Nothing to triage." error={error} />;
+export default async function UnassignedPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  return (
+    <FilteredQueue
+      title="Unassigned"
+      empty="Everything has an owner. Nothing to triage."
+      searchParams={await searchParams}
+      baseFilters={{ assigned: false }}
+    />
+  );
 }

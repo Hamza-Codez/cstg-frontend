@@ -12,15 +12,18 @@ import type { NavItem } from "@/config/nav";
 export function AppShell({
   nav,
   subtitle,
+  search = false,
   children,
 }: {
   nav: NavItem[];
   subtitle?: string;
+  /** Staff get the global ticket search; the portal has its own, scoped one. */
+  search?: boolean;
   children: ReactNode;
 }) {
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <TopBar subtitle={subtitle} />
+      <TopBar subtitle={subtitle} search={search} />
       <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
         <Sidebar items={nav} />
         <div className="flex-1 overflow-y-auto custom-scrollbar">
