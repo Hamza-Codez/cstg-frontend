@@ -175,7 +175,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List Attachments
+         * @description Attachments on a ticket (docs/API.md §8).
+         *
+         *     Not paginated — the per-ticket cap bounds the list.
+         */
+        get: operations["list_attachments_api_v1_tickets__ticket_id__attachments_get"];
         put?: never;
         /** Upload Attachment */
         post: operations["upload_attachment_api_v1_tickets__ticket_id__attachments_post"];
@@ -192,7 +198,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Download Attachment */
+        /**
+         * Download Attachment
+         * @description Stream the stored bytes.
+         *
+         *     StreamingResponse over the storage port rather than FileResponse over a
+         *     path: the port's contract is an opaque key, and a backend need not have a
+         *     filesystem for this route to work.
+         */
         get: operations["download_attachment_api_v1_tickets__ticket_id__attachments__attachment_id__get"];
         put?: never;
         post?: never;
@@ -481,7 +494,7 @@ export interface components {
          * EventType
          * @enum {string}
          */
-        EventType: "CREATED" | "STATUS_CHANGE" | "ASSIGNMENT" | "COMMENT" | "SLA_BREACH";
+        EventType: "CREATED" | "STATUS_CHANGE" | "ASSIGNMENT" | "COMMENT" | "SLA_BREACH" | "ATTACHMENT";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1123,6 +1136,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CommentResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_attachments_api_v1_tickets__ticket_id__attachments_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ticket_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["AttachmentResponse"][];
+                    };
                 };
             };
             /** @description Validation Error */
