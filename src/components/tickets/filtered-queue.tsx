@@ -47,8 +47,13 @@ export async function FilteredQueue({
 
   return (
     <div className="flex flex-col gap-4">
-      <SavedViews views={views} role={session.role} onDelete={deleteSavedViewAction} />
-      <FilterBar role={session.role} resultCount={tickets.length} />
+      <FilterBar
+        role={session.role}
+        resultCount={tickets.length}
+        savedViews={
+          <SavedViews views={views} role={session.role} onDelete={deleteSavedViewAction} />
+        }
+      />
       <QueueView title={title} tickets={tickets} empty={empty} error={error} />
     </div>
   );

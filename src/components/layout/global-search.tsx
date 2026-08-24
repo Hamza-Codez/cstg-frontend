@@ -24,7 +24,7 @@ export function GlobalSearch({
       <label htmlFor="global-search" className="sr-only">
         {placeholder}
       </label>
-      <div className="flex items-center gap-2 rounded-sm bg-text-inverse/10 px-2 py-1.5">
+      <div className="flex items-center gap-2 rounded-sm border border-structure bg-text-inverse/10 px-2 py-1.5">
         <Search aria-hidden strokeWidth={1.5} className="size-4 text-text-inverse/70" />
         <input
           id="global-search"
@@ -37,9 +37,12 @@ export function GlobalSearch({
       {/* Visually compact but present and focusable — Enter is not the only way
           to submit, so the control is reachable without a pointer or a keyboard
           convention the user has to guess. */}
+      {/* Neutral chrome, not the accent: the accent marks the single most
+          important action in a view, and a search submit in the top bar is not
+          it (§2.1). The muted gradient carries the dark ink at 10.0:1. */}
       <button
         type="submit"
-        className="cursor-pointer rounded-sm px-2 py-1 text-sm text-text-inverse/80 hover:bg-text-inverse/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="cursor-pointer rounded-sm border border-border bg-gradient-muted bg-canvas px-3 py-1.5 text-sm font-medium text-text hover:bg-border focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         Go
       </button>

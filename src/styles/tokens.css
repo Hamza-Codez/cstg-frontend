@@ -29,6 +29,9 @@
   --gradient-sidebar: linear-gradient(180deg, #2c3947 0%, #40596f 55%, #547a95 100%);
   --gradient-accent: linear-gradient(90deg, #c2a56d 0%, #d8bd8b 100%);
   --gradient-structure: linear-gradient(90deg, #547a95 0%, #7a9db8 100%);
+  /* Neutral chrome control on a dark bar — canvas stepped into border, both
+   * existing palette values. Carries the dark ink (10.0:1), never white. */
+  --gradient-muted: linear-gradient(180deg, #e8edf2 0%, #cfd8e1 100%);
 
   /* ── Functional signalling ───────────────────────────────────────────────── */
   /* Indicator-only: dots, thin bars, badge text. Never fills, never large areas. */

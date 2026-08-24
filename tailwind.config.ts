@@ -63,6 +63,7 @@ const config: Config = {
         "gradient-sidebar": "var(--gradient-sidebar)",
         "gradient-accent": "var(--gradient-accent)",
         "gradient-structure": "var(--gradient-structure)",
+        "gradient-muted": "var(--gradient-muted)",
       },
       spacing: {
         1: "var(--space-1)",

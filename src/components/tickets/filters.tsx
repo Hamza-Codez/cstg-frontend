@@ -11,6 +11,7 @@
 
 import { ListFilter, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 
 import { Drawer } from "@/components/ui/drawer";
@@ -29,7 +30,42 @@ import type { Role } from "@/lib/types";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
-export function FilterBar({ role, resultCount }: { role: Role; resultCount: number }) {
+/**
+ * A filter control with its label welded on top.
+ *
+ * The label is a filled cap in the dark chrome gradient with white text
+ * (11.8:1), sharing an edge with the control: square where they meet, rounded
+ * on the outside. Reads as one object rather than a caption floating above a
+ * box.
+ */
+function FilterControl({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col">
+      <span className="rounded-t-sm bg-gradient-header px-2 py-1 text-xs font-medium text-text-inverse">
+        {label}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+/** Controls sit flush under their cap: square top, rounded bottom. */
+const WELDED = "rounded-t-none rounded-b-sm";
+
+export function FilterBar({
+  role,
+  resultCount,
+  savedViews,
+}: {
+  role: Role;
+  resultCount: number;
+  /**
+   * Rendered inside the action bar. Passed in rather than imported so this
+   * component stays free of data fetching — the slot arrives already resolved
+   * from the Server Component.
+   */
+  savedViews?: ReactNode;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -55,50 +91,110 @@ export function FilterBar({ role, resultCount }: { role: Role; resultCount: numb
 
   const controls = (
     <div className="flex flex-wrap items-end gap-3">
-      <SearchField initial={filters.q ?? ""} onSearch={(q) => change({ q })} />
+      <FilterControl label="Search">
+        <SearchField initial={filters.q ?? ""} onSearch={(q) => change({ q })} />
+      </FilterControl>
 
-      <Select
-        label="Status"
-        value={filters.status ?? ""}
-        onChange={(event) => change({ status: event.target.value })}
-        options={STATUSES.map((s) => ({ value: s, label: statusLabel(s, "staff") }))}
-      />
-      <Select
-        label="Priority"
-        value={filters.priority ?? ""}
-        onChange={(event) => change({ priority: event.target.value })}
-        options={PRIORITIES.map((p) => ({ value: p, label: priorityLabel(p) }))}
-      />
-      <Select
-        label="Category"
-        value={filters.category ?? ""}
-        onChange={(event) => change({ category: event.target.value })}
-        options={CATEGORIES.map((c) => ({ value: c, label: categoryLabel(c) }))}
-      />
+      <FilterControl label="Status">
+        <Select
+          label="Status"
+          hideLabel
+          className={WELDED}
+          value={filters.status ?? ""}
+          onChange={(event) => change({ status: event.target.value })}
+          options={STATUSES.map((s) => ({ value: s, label: statusLabel(s, "staff") }))}
+        />
+      </FilterControl>
+
+      <FilterControl label="Priority">
+        <Select
+          label="Priority"
+          hideLabel
+          className={WELDED}
+          value={filters.priority ?? ""}
+          onChange={(event) => change({ priority: event.target.value })}
+          options={PRIORITIES.map((p) => ({ value: p, label: priorityLabel(p) }))}
+        />
+      </FilterControl>
+
+      <FilterControl label="Category">
+        <Select
+          label="Category"
+          hideLabel
+          className={WELDED}
+          value={filters.category ?? ""}
+          onChange={(event) => change({ category: event.target.value })}
+          options={CATEGORIES.map((c) => ({ value: c, label: categoryLabel(c) }))}
+        />
+      </FilterControl>
 
       {/* Role-gated controls are ABSENT, not disabled (§1.2). An agent has no
-          assignee filter because every ticket they can see is already theirs;
+          plan filter because every ticket they can see is already theirs;
           rendering it disabled would imply a capability that does not exist.
           The backend refuses these with 403 regardless — this is UX only. */}
       {staffWide && (
-        <Select
-          label="Plan"
-          value={filters.tier ?? ""}
-          onChange={(event) => change({ tier: event.target.value })}
-          options={TIERS.map((t) => ({ value: t, label: tierLabel(t) }))}
-        />
+        <FilterControl label="Plan">
+          <Select
+            label="Plan"
+            hideLabel
+            className={WELDED}
+            value={filters.tier ?? ""}
+            onChange={(event) => change({ tier: event.target.value })}
+            options={TIERS.map((t) => ({ value: t, label: tierLabel(t) }))}
+          />
+        </FilterControl>
       )}
+    </div>
+  );
 
-      <ToggleFilter
-        label="Overdue only"
-        checked={filters.breached === true}
-        onChange={(on) => change({ breached: on ? "true" : undefined })}
-      />
-      <ToggleFilter
-        label="Escalated only"
-        checked={filters.escalated === true}
-        onChange={(on) => change({ escalated: on ? "true" : undefined })}
-      />
+  /**
+   * Saved views, the boolean toggles, and the active-filter chips, together in
+   * one persistent bar.
+   *
+   * Persistent is the point: the chips row used to appear and disappear, which
+   * reflowed everything below it every time a filter was toggled. A bar that is
+   * always present with a stable minimum height keeps the page still.
+   */
+  const actionBar = (
+    <div className="flex min-h-11 flex-wrap items-center gap-x-4 gap-y-2 rounded-sm bg-gradient-header px-3 py-2">
+      {savedViews}
+
+      <div className="flex items-center gap-4">
+        <ToggleFilter
+          label="Overdue only"
+          checked={filters.breached === true}
+          onChange={(on) => change({ breached: on ? "true" : undefined })}
+        />
+        <ToggleFilter
+          label="Escalated only"
+          checked={filters.escalated === true}
+          onChange={(on) => change({ escalated: on ? "true" : undefined })}
+        />
+      </div>
+
+      {chips.length > 0 && (
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          {chips.map((chip) => (
+            <button
+              key={chip.key}
+              type="button"
+              onClick={() => change({ [chip.key]: undefined })}
+              aria-label={`Remove filter: ${chip.label}`}
+              className="flex cursor-pointer items-center gap-1 rounded-full bg-surface px-3 py-1 text-xs text-text hover:bg-canvas"
+            >
+              {chip.label}
+              <X aria-hidden strokeWidth={1.5} className="size-3" />
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={clearAll}
+            className="cursor-pointer text-xs text-text-inverse underline"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
     </div>
   );
 
@@ -107,8 +203,10 @@ export function FilterBar({ role, resultCount }: { role: Role; resultCount: numb
       {/* Desktop */}
       <div className="hidden md:block">{controls}</div>
 
-      {/* Mobile: the bar collapses behind a trigger showing the active count,
-          so a user who scrolled past it still knows the list is filtered. */}
+      {/* Mobile: the selectors collapse behind a trigger showing the active
+          count, so a user who scrolled past them still knows the list is
+          filtered. The action bar stays visible at every width — it is where
+          the toggles and chips live. */}
       <div className="md:hidden">
         <button
           type="button"
@@ -128,29 +226,7 @@ export function FilterBar({ role, resultCount }: { role: Role; resultCount: numb
         </Drawer>
       </div>
 
-      {chips.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          {chips.map((chip) => (
-            <button
-              key={chip.key}
-              type="button"
-              onClick={() => change({ [chip.key]: undefined })}
-              aria-label={`Remove filter: ${chip.label}`}
-              className="flex cursor-pointer items-center gap-1 rounded-full border border-border bg-surface px-3 py-1 text-xs text-text hover:border-structure"
-            >
-              {chip.label}
-              <X aria-hidden strokeWidth={1.5} className="size-3" />
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={clearAll}
-            className="cursor-pointer text-xs text-structure underline"
-          >
-            Clear all
-          </button>
-        </div>
-      )}
+      {actionBar}
 
       {/* A silent list change is invisible to a screen-reader user. */}
       <p aria-live="polite" className="sr-only">
@@ -188,24 +264,24 @@ function SearchField({
     onSearch(value);
   }
 
+  // No label of its own: FilterControl supplies the cap, and a second caption
+  // here made the Search column a row taller than the other four.
   return (
-    <label className="flex flex-col gap-1">
-      <span className="text-[13px] font-medium text-structure">Search</span>
-      <input
-        type="search"
-        value={value}
-        placeholder="Subject or description"
-        onChange={(event) => schedule(event.target.value)}
-        onKeyDown={(event) => {
-          // Debounce must never swallow an explicit submit.
-          if (event.key === "Enter") {
-            event.preventDefault();
-            submitNow();
-          }
-        }}
-        className="rounded-sm border border-structure bg-surface px-3 py-2 text-sm text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
-      />
-    </label>
+    <input
+      type="search"
+      value={value}
+      aria-label="Search"
+      placeholder="Subject or description"
+      onChange={(event) => schedule(event.target.value)}
+      onKeyDown={(event) => {
+        // Debounce must never swallow an explicit submit.
+        if (event.key === "Enter") {
+          event.preventDefault();
+          submitNow();
+        }
+      }}
+      className={`${WELDED} border border-border bg-surface px-3 py-2 text-sm text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent`}
+    />
   );
 }
 
@@ -219,7 +295,7 @@ function ToggleFilter({
   onChange: (on: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 py-2 text-sm text-text">
+    <label className="flex cursor-pointer items-center gap-2 text-sm text-text-inverse">
       <input
         type="checkbox"
         checked={checked}

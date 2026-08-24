@@ -79,7 +79,7 @@ export function SavedViews({
         return (
           <span
             key={view.id}
-            className="flex items-center gap-1 rounded-full border border-border bg-surface pl-3 pr-1 text-xs text-text"
+            className="flex items-center gap-1 rounded-full bg-surface pl-3 pr-1 text-xs text-text"
           >
             <button
               type="button"
@@ -123,7 +123,7 @@ export function SavedViews({
         <button
           type="button"
           onClick={() => setNaming(true)}
-          className="cursor-pointer rounded-full border border-dashed border-border px-3 py-1 text-xs text-structure hover:border-structure"
+          className="cursor-pointer rounded-full border border-dashed border-text-inverse/60 px-3 py-1 text-xs text-text-inverse hover:border-text-inverse hover:bg-text-inverse/10"
         >
           Save this view
         </button>
