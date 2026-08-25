@@ -25,6 +25,9 @@ const config: Config = {
       header: "var(--color-header)",
       "header-alt": "var(--color-header-alt)",
       text: "var(--color-text)",
+      // Secondary text. A real colour, not `text-text/60` — the tokens here
+      // carry no `<alpha-value>`, so opacity modifiers compile to nothing.
+      "text-muted": "var(--color-text-muted)",
       "text-inverse": "var(--color-text-inverse)",
       border: "var(--color-border)",
       // Status signalling only — see tokens.css §2.2.

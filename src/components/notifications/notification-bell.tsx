@@ -88,12 +88,16 @@ export function NotificationBell({ audience }: { audience: Audience }) {
       </span>
 
       {open && (
-        <div className="absolute right-0 z-20 mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-sm border border-border bg-surface shadow-lg">
+        // `text-text` here is load-bearing, not decoration: this popover renders
+        // inside the top bar, whose header sets `text-text-inverse`. Without an
+        // explicit colour every row inherits white and disappears against the
+        // white surface — which is exactly how it shipped and looked blank.
+        <div className="absolute right-0 z-20 mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-sm border border-border bg-surface text-text shadow-lg">
           <p className="border-b border-border bg-gradient-header px-3 py-2 text-sm font-medium text-text-inverse">
             Notifications
           </p>
 
-          {loadingList && <p className="px-3 py-4 text-sm text-text/60">Loading…</p>}
+          {loadingList && <p className="px-3 py-4 text-sm text-text-muted">Loading…</p>}
 
           {listError && (
             <div className="flex items-center justify-between gap-2 px-3 py-4">
@@ -112,11 +116,11 @@ export function NotificationBell({ audience }: { audience: Audience }) {
             // No CTA: there is no action to direct toward.
             <div className="flex flex-col items-center gap-2 px-3 py-6">
               <Bell aria-hidden strokeWidth={1.5} className="size-5 text-structure" />
-              <p className="text-sm text-text/60">You&apos;re all caught up.</p>
+              <p className="text-sm text-text-muted">You&apos;re all caught up.</p>
             </div>
           )}
 
-          <ul className="max-h-96 overflow-y-auto">
+          <ul className="custom-scrollbar max-h-96 overflow-y-auto">
             {items.slice(0, PANEL_LIMIT).map((item) => (
               <li
                 key={item.event_id}
@@ -138,31 +142,35 @@ export function NotificationBell({ audience }: { audience: Audience }) {
                     )}
                     <span
                       className={
-                        item.read ? "text-sm text-text/80" : "text-sm font-medium text-text"
+                        item.read ? "text-sm text-text" : "text-sm font-medium text-text"
                       }
                     >
                       {notificationSentence(item, audience)}
                       {!item.read && <span className="sr-only"> — unread</span>}
                     </span>
                   </span>
-                  <span className="truncate pl-3 text-xs text-text/60">{item.ticket_subject}</span>
-                  <time dateTime={item.created_at} className="pl-3 text-xs text-text/50">
+                  <span className="truncate pl-3 text-xs text-text-muted">{item.ticket_subject}</span>
+                  <time dateTime={item.created_at} suppressHydrationWarning className="pl-3 text-xs text-text-muted">
                     {formatDateTime(item.created_at)}
                   </time>
                 </Link>
 
                 {/* Named, not a bare "×": a screen reader announcing "button, X"
-                    seven times running says nothing about which one. Revealed on
-                    hover AND focus — hover-only would put it out of reach of the
-                    keyboard entirely. */}
+                    seven times running says nothing about which one.
+
+                    Always visible, never hover-revealed: hover does not exist on
+                    a touch screen, so `opacity-0 group-hover:opacity-100` would
+                    make dismissal unreachable on a phone entirely. */}
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    void dismiss(item.event_id);
+                  onClick={(event) => {
+                    // The row is a link; without this a dismissal would also
+                    // navigate to the ticket it just removed.
+                    event.preventDefault();
+                    void onDismiss(item.event_id);
                   }}
                   aria-label={`Dismiss — ${notificationSentence(item, audience)}`}
-                  className="absolute right-1 top-1 cursor-pointer rounded-sm p-1.5 bg-blue-900 text-white opacity-0 transition-opacity hover:bg-blue-800 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent group-hover:opacity-100"
+                  className="absolute right-1 top-1 cursor-pointer rounded-sm border border-control-border bg-control p-1.5 text-text-inverse transition-colors hover:bg-control-hover hover:border-control-border-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
                 >
                   <X aria-hidden strokeWidth={1.5} className="size-3.5" />
                 </button>

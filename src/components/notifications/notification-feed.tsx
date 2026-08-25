@@ -90,10 +90,10 @@ export function NotificationFeed({
         // No CTA: there is no action to direct toward.
         <div className="flex flex-col items-center gap-2 rounded-md border border-border bg-surface px-4 py-12">
           <Bell aria-hidden strokeWidth={1.5} className="size-6 text-structure" />
-          <p className="text-sm text-text/60">You&apos;re all caught up.</p>
+          <p className="text-sm text-text-muted">You&apos;re all caught up.</p>
         </div>
       ) : (
-        <ul className="overflow-hidden rounded-md border border-border bg-surface">
+        <ul className="custom-scrollbar overflow-hidden rounded-md border border-border bg-surface">
           {items.map((item) => (
             <li
               key={item.event_id}
@@ -112,25 +112,29 @@ export function NotificationFeed({
                     />
                   )}
                   <span
-                    className={item.read ? "text-sm text-text/80" : "text-sm font-medium text-text"}
+                    className={item.read ? "text-sm text-text" : "text-sm font-medium text-text"}
                   >
                     {notificationSentence(item, audience)}
                     {!item.read && <span className="sr-only"> — unread</span>}
                   </span>
                 </span>
-                <span className="truncate pl-4 text-xs text-text/60">{item.ticket_subject}</span>
-                <time dateTime={item.created_at} className="pl-4 text-xs text-text/50">
+                <span className="truncate pl-4 text-xs text-text-muted">{item.ticket_subject}</span>
+                <time dateTime={item.created_at} suppressHydrationWarning className="pl-4 text-xs text-text-muted">
                   {formatDateTime(item.created_at)}
                 </time>
               </Link>
 
               {/* Named, not a bare "×" — fifty rows of "button, X" tells a
-                  screen-reader user nothing. Hover AND focus, never hover-only. */}
+                  screen-reader user nothing. Always visible: hover does not
+                  exist on touch, so a hover-only reveal is unreachable there. */}
               <button
                 type="button"
-                onClick={() => void onDismiss(item)}
+                onClick={(event) => {
+                  event.preventDefault();
+                  void onDismiss(item);
+                }}
                 aria-label={`Dismiss — ${notificationSentence(item, audience)}`}
-                className="absolute right-2 top-2 cursor-pointer rounded-sm p-2 bg-blue-900 text-white opacity-0 transition-opacity hover:bg-blue-800 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent group-hover:opacity-100"
+                className="absolute right-2 top-2 cursor-pointer rounded-sm p-2 bg-blue-900 text-white transition-colors hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
               >
                 <X aria-hidden strokeWidth={1.5} className="size-4" />
               </button>
@@ -158,7 +162,7 @@ export function NotificationFeed({
         <div className="flex flex-col gap-4">
           {/* Says what survives, because the destructive-sounding word is
               "clear" and people reasonably fear it deletes the tickets. */}
-          <p className="text-sm text-text/80">
+          <p className="text-sm text-text">
             This empties your list. It only affects you — nobody else&apos;s notifications
             change, and no tickets or history are deleted. It can&apos;t be undone.
           </p>

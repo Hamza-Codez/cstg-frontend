@@ -21,10 +21,16 @@
   }
 }
 
-/* Slim, themed custom scrollbar for the main outlet */
+/* Slim, themed scrollbar — the main outlet, the notification panel, and any
+ * other scrolling surface. The browser default is ~16px of grey with stepper
+ * arrows that fights every surface it lands on.
+ *
+ * Both syntaxes on purpose: `scrollbar-width`/`scrollbar-color` is the standard
+ * and the only one Firefox honours, while older Chromium and Safari still need
+ * the `::-webkit-` pseudo-elements. Neither alone covers the field. */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
+  scrollbar-color: var(--color-scrollbar) transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -37,12 +43,18 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: var(--color-border);
+  background-color: var(--color-scrollbar);
   border-radius: var(--radius-full);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-structure);
+  background-color: var(--color-scrollbar-hover);
+}
+
+/* No stepper arrows: they are two more 16px targets nobody uses, and they are
+ * what makes the default bar look bolted on. */
+.custom-scrollbar::-webkit-scrollbar-button {
+  display: none;
 }
 
 @layer utilities {
