@@ -3,7 +3,7 @@
 import { AlertCircle, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/modal"
-import type { BulkResult, TicketResponse } from "@/lib/types"
+import type { BulkResult } from "@/lib/types"
 
 const ERROR_MESSAGES: Record<string, string> = {
   STATE_CONFLICT: "someone else updated this ticket",
