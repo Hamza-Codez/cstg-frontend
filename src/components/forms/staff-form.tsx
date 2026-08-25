@@ -4,7 +4,12 @@
 
 import { useActionState, useEffect } from "react";
 
-import { createStaffAction, setStaffActiveAction, type AdminState } from "@/app/actions/admin";
+import {
+  createStaffAction,
+  setStaffActiveAction,
+  updateStaffAction,
+  type AdminState,
+} from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
@@ -85,6 +90,66 @@ export function ActiveToggle({
         className="text-sm"
       >
         {isActive ? "Deactivate" : "Activate"}
+      </Button>
+    </form>
+  );
+}
+
+/**
+ * Capacity and automation opt-out for one agent (spec07 frontend §4).
+ *
+ * `accepts_auto_assignment` governs the AUTOMATIC path only — a dispatcher
+ * assigning by hand has already made the decision the flag exists to defer — so
+ * the label says what it does rather than repeating the field name.
+ */
+export function AgentRouting({
+  userId,
+  maxOpenTickets,
+  acceptsAutoAssignment,
+}: {
+  userId: string;
+  maxOpenTickets: number | null;
+  acceptsAutoAssignment: boolean;
+}) {
+  const [state, formAction, pending] = useActionState<AdminState, FormData>(
+    updateStaffAction,
+    {},
+  );
+  const { show } = useToast();
+
+  useEffect(() => {
+    if (state.error) show(state.error, "error");
+    if (state.ok) show("Saved");
+  }, [state, show]);
+
+  return (
+    <form action={formAction} className="flex items-center gap-3">
+      <input type="hidden" name="user_id" value={userId} />
+      <label className="flex items-center gap-2 text-sm text-text">
+        <span className="sr-only">Ticket limit</span>
+        <input
+          type="number"
+          name="max_open_tickets"
+          min={1}
+          defaultValue={maxOpenTickets ?? ""}
+          // Blank means unlimited. An empty numeric field otherwise reads as
+          // unset-and-broken, so the placeholder says so.
+          placeholder="No limit"
+          className="w-24 rounded-sm border border-border bg-surface px-2 py-1 text-sm text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
+        />
+      </label>
+      <label className="flex items-center gap-2 text-sm text-text">
+        <input
+          type="checkbox"
+          name="accepts_auto_assignment"
+          value="true"
+          defaultChecked={acceptsAutoAssignment}
+          className="cursor-pointer accent-accent"
+        />
+        Include in automatic assignment
+      </label>
+      <Button type="submit" variant="secondary" disabled={pending}>
+        Save
       </Button>
     </form>
   );

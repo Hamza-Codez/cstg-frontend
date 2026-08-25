@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { PriorityMatrix } from "@/components/forms/priority-matrix";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { AssignmentSettingsForm } from "@/components/forms/assignment-settings-form";
 import { PolicyHistory } from "@/components/config/policy-history";
 import { SlaPolicyForm } from "@/components/forms/sla-policy-form";
 import { getConfiguration, getSlaPolicyHistory } from "@/lib/api/admin";
@@ -33,7 +34,7 @@ export default async function ConfigurationPage() {
     );
   }
 
-  const { priority_rules, sla_durations } = result.data;
+  const { priority_rules, sla_durations, assignment } = result.data;
 
   return (
     <div className="flex flex-col gap-4">
@@ -45,6 +46,15 @@ export default async function ConfigurationPage() {
         </CardHeader>
         <CardBody>
           <PriorityMatrix rules={priority_rules} />
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Assignment</CardTitle>
+        </CardHeader>
+        <CardBody>
+          <AssignmentSettingsForm settings={assignment} />
         </CardBody>
       </Card>
 

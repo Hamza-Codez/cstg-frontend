@@ -42,7 +42,13 @@ function sentence(event: TicketEventResponse, audience: Audience): string {
         : `Status changed to ${to}`;
     }
     case "ASSIGNMENT":
-      return "Assigned to an agent";
+      // Automated assignment is the second SYSTEM actor after the SLA monitor.
+      // Without its own sentence it would render with an empty actor name
+      // (spec07 frontend §6). Customers never see ASSIGNMENT events at all —
+      // who works a ticket is internal routing.
+      return event.actor_type === "SYSTEM"
+        ? "Assigned automatically"
+        : "Assigned to an agent";
     case "COMMENT":
       return "A note was added";
     case "SLA_BREACH":

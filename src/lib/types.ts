@@ -34,6 +34,7 @@ export type PriorityMetrics = Schemas["PriorityMetrics"];
 export type ConfigurationResponse = Schemas["ConfigurationResponse"];
 export type PriorityRuleEntry = Schemas["PriorityRuleEntry"];
 export type SlaDurationEntry = Schemas["SlaDurationEntry"];
+export type AssignmentSettings = Schemas["AssignmentSettings"];
 export type SlaPolicySummary = Schemas["SlaPolicySummary"];
 export type SlaPolicyVersionSummary = Schemas["SlaPolicyVersionSummary"];
 export type EventType = Schemas["EventType"];

@@ -2,6 +2,7 @@
 
 import { apiFetch, type ApiResult } from "./client";
 import type {
+  AssignmentSettings,
   ConfigurationResponse,
   MetricsOverview,
   Priority,
@@ -58,4 +59,25 @@ export function getSlaPolicyHistory(
     "/api/v1/configuration/sla-policy/history",
     { token },
   );
+}
+
+/** Partial staff update: capacity and automation opt-out (docs/API.md §10). */
+export function updateStaff(
+  token: string,
+  userId: string,
+  body: { max_open_tickets?: number | null; accepts_auto_assignment?: boolean },
+): Promise<ApiResult<UserSummary>> {
+  return apiFetch<UserSummary>(`/api/v1/users/${userId}`, { method: "PATCH", token, body });
+}
+
+/** How new tickets are routed (docs/API.md §11). */
+export function setAssignmentConfig(
+  token: string,
+  body: AssignmentSettings,
+): Promise<ApiResult<ConfigurationResponse>> {
+  return apiFetch<ConfigurationResponse>("/api/v1/configuration/assignment", {
+    method: "PUT",
+    token,
+    body,
+  });
 }

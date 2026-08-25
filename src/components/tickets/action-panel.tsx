@@ -14,6 +14,7 @@
 import { useActionState, useEffect } from "react";
 
 import { transitionAction, type ActionState } from "@/app/actions/staff";
+import { ClaimButton } from "@/components/tickets/claim-button";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { availableTransitions } from "@/lib/transitions";
@@ -44,20 +45,30 @@ export function ActionPanel({
 
   const options = availableTransitions(status, role, { hasAssignee, isAssignedToMe });
 
+  // Claim sits above the transitions because it is their prerequisite: T1
+  // requires an assignee (spec07 frontend §2).
+  const canClaim = !hasAssignee && (role === "AGENT" || role === "ADMIN");
+
   if (options.length === 0) {
     return (
-      <p className="text-sm text-text/60">
+      <div className="flex flex-col gap-2">
+        {canClaim && <ClaimButton ticketId={ticketId} block />}
+        <p className="text-sm text-text/60">
         {status === "CLOSED"
           ? "This ticket is closed."
           : hasAssignee
             ? "No action available to you right now."
-            : "Assign an agent before work can start."}
-      </p>
+            : canClaim
+              ? "Take this ticket to start working on it."
+              : "Assign an agent before work can start."}
+        </p>
+      </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-2">
+      {canClaim && <ClaimButton ticketId={ticketId} block />}
       {options.map((option) => (
         <form key={option.to} action={formAction}>
           <input type="hidden" name="ticket_id" value={ticketId} />

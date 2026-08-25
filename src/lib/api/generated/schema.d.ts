@@ -120,6 +120,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tickets/{ticket_id}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Claim Ticket
+         * @description An agent takes an unassigned ticket (docs/API.md §6).
+         *
+         *     409 when someone else got there first — the normal outcome of two agents
+         *     scanning the same queue, not a fault.
+         */
+        post: operations["claim_ticket_api_v1_tickets__ticket_id__claim_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tickets/{ticket_id}/transitions": {
         parameters: {
             query?: never;
@@ -368,6 +391,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/configuration/assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Assignment
+         * @description Strategy and the auto-assign switch (docs/API.md §11).
+         */
+        put: operations["set_assignment_api_v1_configuration_assignment_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/saved-views": {
         parameters: {
             query?: never;
@@ -432,6 +475,24 @@ export interface components {
              * Format: uuid
              */
             assignee_id: string;
+            /**
+             * Override Capacity
+             * @default false
+             */
+            override_capacity: boolean;
+        };
+        /**
+         * AssignmentSettings
+         * @description How new tickets are routed (spec07 §6).
+         */
+        AssignmentSettings: {
+            /**
+             * Strategy
+             * @enum {string}
+             */
+            strategy: "MANUAL" | "ROUND_ROBIN" | "LEAST_LOADED";
+            /** Auto Assign On Create */
+            auto_assign_on_create: boolean;
         };
         /** AttachmentResponse */
         AttachmentResponse: {
@@ -519,6 +580,7 @@ export interface components {
             /** Sla Durations */
             sla_durations: components["schemas"]["SlaDurationEntry"][];
             sla_policy: components["schemas"]["SlaPolicySummary"];
+            assignment: components["schemas"]["AssignmentSettings"];
         };
         /**
          * CustomerCreate
@@ -997,6 +1059,18 @@ export interface components {
              */
             email: string;
             role: components["schemas"]["Role"];
+            /**
+             * Open Ticket Count
+             * @default 0
+             */
+            open_ticket_count: number;
+            /** Max Open Tickets */
+            max_open_tickets?: number | null;
+            /**
+             * Accepts Auto Assignment
+             * @default true
+             */
+            accepts_auto_assignment: boolean;
             /** Is Active */
             is_active: boolean;
         };
@@ -1006,10 +1080,16 @@ export interface components {
          *
          *     Deactivating never removes them: existing tickets keep naming their owner, and
          *     the audit trail must stay readable. It only stops new assignments (INV-8).
+         *
+         *     All fields optional so a PATCH can change one without restating the rest.
          */
         UserUpdate: {
             /** Is Active */
-            is_active: boolean;
+            is_active?: boolean | null;
+            /** Max Open Tickets */
+            max_open_tickets?: number | null;
+            /** Accepts Auto Assignment */
+            accepts_auto_assignment?: boolean | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -1236,6 +1316,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TicketDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    claim_ticket_api_v1_tickets__ticket_id__claim_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ticket_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketResponse"];
                 };
             };
             /** @description Validation Error */
@@ -1713,6 +1824,39 @@ export interface operations {
                     "application/json": {
                         [key: string]: components["schemas"]["SlaPolicyVersionSummary"][];
                     };
+                };
+            };
+        };
+    };
+    set_assignment_api_v1_configuration_assignment_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignmentSettings"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigurationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

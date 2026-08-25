@@ -47,11 +47,12 @@ export function assignTicket(
   token: string,
   ticketId: string,
   assigneeId: string,
+  overrideCapacity = false,
 ): Promise<ApiResult<TicketResponse>> {
   return apiFetch<TicketResponse>(`/api/v1/tickets/${ticketId}/assignment`, {
     method: "POST",
     token,
-    body: { assignee_id: assigneeId },
+    body: { assignee_id: assigneeId, override_capacity: overrideCapacity },
   });
 }
 
@@ -93,4 +94,12 @@ export function listComments(
   ticketId: string,
 ): Promise<ApiResult<{ items: CommentResponse[] }>> {
   return apiFetch<{ items: CommentResponse[] }>(`/api/v1/tickets/${ticketId}/comments`, { token });
+}
+
+/** An agent takes an unassigned ticket (docs/API.md §6). */
+export function claimTicket(token: string, ticketId: string): Promise<ApiResult<TicketResponse>> {
+  return apiFetch<TicketResponse>(`/api/v1/tickets/${ticketId}/claim`, {
+    method: "POST",
+    token,
+  });
 }
