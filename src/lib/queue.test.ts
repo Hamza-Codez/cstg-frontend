@@ -19,6 +19,8 @@ const ticket = (over: Partial<TicketResponse> & { id: string }): TicketResponse 
   sla_paused_seconds: 0,
   reopen_count: 0,
   resolved_at: null,
+  // Pinned at creation (INV-15) — the fixture just needs a stable value.
+  sla_policy_version_id: "00000000-0000-0000-0000-000000000001",
   escalation_level: 0,
   sla_breached_at: null,
   created_at: new Date(now - HOUR).toISOString(),

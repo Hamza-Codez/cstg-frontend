@@ -15,8 +15,19 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { listAttachments } from "@/lib/api/attachments";
 import { getTicket, listActiveAgents, listComments } from "@/lib/api/tickets";
 import { getSession } from "@/lib/auth/session";
-import { formatDateTime } from "@/lib/format";
-import { categoryLabel, commentTypeLabel, term } from "@/lib/labels";
+import { formatDate, formatDateTime } from "@/lib/format";
+import { categoryLabel, commentTypeLabel, priorityLabel, term } from "@/lib/labels";
+
+/** "2 hours" / "30 minutes" — the window a ticket was actually given. */
+function slaWindowLabel(seconds: number): string {
+  if (seconds < 3600) {
+    const minutes = Math.round(seconds / 60);
+    return `${minutes} minute${minutes === 1 ? "" : "s"}`;
+  }
+  const hours = seconds / 3600;
+  const rounded = Number.isInteger(hours) ? hours : Number(hours.toFixed(2));
+  return `${rounded} hour${rounded === 1 ? "" : "s"}`;
+}
 
 export const metadata = { title: "Ticket · Support Engine" };
 
@@ -199,7 +210,27 @@ export default async function StaffTicketPage({
                 <Row label={term("assignee", "staff")} value={ticket.assignee?.name ?? "Unassigned"} />
                 <Row label="Category" value={categoryLabel(ticket.category)} />
                 <Row label="Created" value={formatDateTime(ticket.created_at)} />
-                <Row label={term("deadline", "staff")} value={formatDateTime(ticket.deadline)} />
+                <Row
+                  label={term("deadline", "staff")}
+                  value={formatDateTime(ticket.sla_due_at)}
+                />
+                {/* Provenance. Without it a ticket created under an old policy
+                    looks like a bug against the current configuration
+                    (spec06 frontend §5). Staff only — a policy version is a
+                    sharper-edged version of the priority customers never see. */}
+                {ticket.sla_policy_seconds !== null &&
+                  ticket.sla_policy_seconds !== undefined && (
+                    <Row
+                      label="Target"
+                      value={`${slaWindowLabel(ticket.sla_policy_seconds)} · ${priorityLabel(
+                        ticket.priority,
+                      )}${
+                        ticket.sla_policy_activated_at
+                          ? ` · policy of ${formatDate(ticket.sla_policy_activated_at)}`
+                          : ""
+                      }`}
+                    />
+                  )}
               </dl>
             </CardBody>
           </Card>

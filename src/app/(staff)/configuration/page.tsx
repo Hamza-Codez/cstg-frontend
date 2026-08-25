@@ -2,21 +2,23 @@ import { redirect } from "next/navigation";
 
 import { PriorityMatrix } from "@/components/forms/priority-matrix";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
-import { getConfiguration } from "@/lib/api/admin";
+import { PolicyHistory } from "@/components/config/policy-history";
+import { SlaPolicyForm } from "@/components/forms/sla-policy-form";
+import { getConfiguration, getSlaPolicyHistory } from "@/lib/api/admin";
 import { getSession } from "@/lib/auth/session";
-import { priorityLabel } from "@/lib/labels";
 
 export const metadata = { title: "Configuration · Support Engine" };
-
-function readableHours(seconds: number): string {
-  return `${Math.round(seconds / 3600)}h`;
-}
 
 export default async function ConfigurationPage() {
   const session = await getSession();
   if (!session) redirect("/sign-in");
 
-  const result = await getConfiguration(session.token);
+  // Both together: history is reference material, and a failure to load it
+  // must not take the form down with it.
+  const [result, history] = await Promise.all([
+    getConfiguration(session.token),
+    getSlaPolicyHistory(session.token),
+  ]);
   if (!result.ok) {
     return (
       <Card>
@@ -48,20 +50,12 @@ export default async function ConfigurationPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>SLA windows</CardTitle>
+          <CardTitle>Response times</CardTitle>
         </CardHeader>
-        <CardBody className="flex flex-col gap-2">
-          <p className="text-xs text-text/60">
-            Read-only reference. Durations are fixed in this version.
-          </p>
-          <dl className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
-            {sla_durations.map((entry) => (
-              <div key={entry.priority} className="flex gap-2">
-                <dt className="text-text/60">{priorityLabel(entry.priority)}</dt>
-                <dd className="text-text">{readableHours(entry.seconds)}</dd>
-              </div>
-            ))}
-          </dl>
+        <CardBody className="flex flex-col gap-4">
+          {/* Editable from P17 — was a read-only reference in v1. */}
+          <SlaPolicyForm durations={sla_durations} />
+          <PolicyHistory versions={history.ok ? history.data.items : []} />
         </CardBody>
       </Card>
     </div>

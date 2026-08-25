@@ -320,6 +320,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/configuration/sla-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace Sla Policy
+         * @description Publish a new SLA policy version (docs/API.md §11).
+         *
+         *     The whole policy at once, because it must stay total. Affects **new tickets
+         *     only** — priority and deadline are frozen at creation (INV-1), so existing
+         *     tickets keep the terms they were created under.
+         */
+        put: operations["replace_sla_policy_api_v1_configuration_sla_policy_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/configuration/sla-policy/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sla Policy History
+         * @description Every version, newest first.
+         *
+         *     This is what makes a frozen deadline explainable: a ticket showing a
+         *     six-hour window when the config says eight is otherwise indistinguishable
+         *     from a bug.
+         */
+        get: operations["sla_policy_history_api_v1_configuration_sla_policy_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/saved-views": {
         parameters: {
             query?: never;
@@ -470,6 +518,7 @@ export interface components {
             priority_rules: components["schemas"]["PriorityRuleEntry"][];
             /** Sla Durations */
             sla_durations: components["schemas"]["SlaDurationEntry"][];
+            sla_policy: components["schemas"]["SlaPolicySummary"];
         };
         /**
          * CustomerCreate
@@ -653,14 +702,68 @@ export interface components {
              */
             created_at: string;
         };
-        /**
-         * SlaDurationEntry
-         * @description Read-only in v1 — the durations are fixed in the domain (SLA_ENGINE.md §1).
-         */
+        /** SlaDurationEntry */
         SlaDurationEntry: {
             priority: components["schemas"]["Priority"];
             /** Seconds */
             seconds: number;
+        };
+        /**
+         * SlaPolicySummary
+         * @description The active policy — configurable from P17 (was read-only in v1).
+         */
+        SlaPolicySummary: {
+            /**
+             * Version Id
+             * Format: uuid
+             */
+            version_id: string;
+            /** Activated At */
+            activated_at: string | null;
+            /** Note */
+            note: string | null;
+            /** Durations */
+            durations: components["schemas"]["SlaDurationEntry"][];
+        };
+        /**
+         * SlaPolicyUpdate
+         * @description A full replacement of the durations.
+         *
+         *     Whole-policy rather than per-priority for the same reason as the matrix: the
+         *     mapping must stay **total** (SLA_ENGINE.md §2), and per-priority edits pass
+         *     through states that are not.
+         */
+        SlaPolicyUpdate: {
+            /** Durations */
+            durations: components["schemas"]["SlaDurationEntry"][];
+            /** Note */
+            note?: string | null;
+        };
+        /**
+         * SlaPolicyVersionSummary
+         * @description One entry of the history that makes a frozen deadline explainable.
+         */
+        SlaPolicyVersionSummary: {
+            /**
+             * Version Id
+             * Format: uuid
+             */
+            version_id: string;
+            /** Activated At */
+            activated_at: string | null;
+            /** Note */
+            note: string | null;
+            /** Durations */
+            durations: components["schemas"]["SlaDurationEntry"][];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Superseded At */
+            superseded_at: string | null;
+            /** Is Active */
+            is_active: boolean;
         };
         /** TicketCreate */
         TicketCreate: {
@@ -703,6 +806,11 @@ export interface components {
             sla_paused_seconds: number;
             /** Reopen Count */
             reopen_count: number;
+            /**
+             * Sla Policy Version Id
+             * Format: uuid
+             */
+            sla_policy_version_id: string;
             /** Resolved At */
             resolved_at: string | null;
             /** Escalation Level */
@@ -719,6 +827,10 @@ export interface components {
             assignee?: components["schemas"]["AssigneeSummary"] | null;
             /** Timeline */
             timeline?: components["schemas"]["TicketEventResponse"][];
+            /** Sla Policy Seconds */
+            sla_policy_seconds?: number | null;
+            /** Sla Policy Activated At */
+            sla_policy_activated_at?: string | null;
         };
         /**
          * TicketEventResponse
@@ -797,6 +909,11 @@ export interface components {
             sla_paused_seconds: number;
             /** Reopen Count */
             reopen_count: number;
+            /**
+             * Sla Policy Version Id
+             * Format: uuid
+             */
+            sla_policy_version_id: string;
             /** Resolved At */
             resolved_at: string | null;
             /** Escalation Level */
@@ -1541,6 +1658,61 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    replace_sla_policy_api_v1_configuration_sla_policy_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SlaPolicyUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigurationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sla_policy_history_api_v1_configuration_sla_policy_history_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["SlaPolicyVersionSummary"][];
+                    };
                 };
             };
         };
