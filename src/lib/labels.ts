@@ -158,3 +158,15 @@ export function notificationSentence(
       return audience === "customer" ? "You sent this request" : `${actor} raised a ticket`;
   }
 }
+
+/**
+ * Where each audience's notification history lives.
+ *
+ * Two paths, not one: route groups do not affect the URL, so a single
+ * `/notifications` in both `(portal)` and `(staff)` would be two pages
+ * resolving to the same route. The split follows the vocabulary — customers
+ * get "Updates" at `/updates`, staff get "Notifications".
+ */
+export function notificationsPath(audience: Audience): string {
+  return audience === "customer" ? "/updates" : "/notifications";
+}

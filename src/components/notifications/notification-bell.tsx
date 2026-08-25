@@ -1,25 +1,32 @@
 "use client";
 
 /**
- * Bell and panel (spec08 frontend §4–5).
+ * Bell and panel (spec08 frontend §4–5, extended at P21).
  *
  * A popover, not a modal: reading notifications is a glance, and a
  * focus-trapping overlay is the wrong weight for it.
+ *
+ * Since P21 the panel is a **history** of the last few notifications rather
+ * than a queue that empties on open, each row individually dismissable. The
+ * full list lives on the notifications page; this is deliberately the short
+ * version, because a bell you have to scroll is a page in a costume.
  */
 
-import { Bell } from "lucide-react";
+import { Bell, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-import { useNotifications } from "@/hooks/use-notifications";
+import { useToast } from "@/components/ui/toast";
+import { PANEL_LIMIT, useNotifications } from "@/hooks/use-notifications";
 import { formatDateTime } from "@/lib/format";
-import { notificationSentence } from "@/lib/labels";
+import { notificationSentence, notificationsPath } from "@/lib/labels";
 import type { Audience } from "@/lib/types";
 
 export function NotificationBell({ audience }: { audience: Audience }) {
-  const { count, items, loadingList, listError, openPanel } = useNotifications();
+  const { count, items, loadingList, listError, openPanel, dismiss } = useNotifications();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { show } = useToast();
 
   useEffect(() => {
     if (!open) return;
@@ -40,8 +47,16 @@ export function NotificationBell({ audience }: { audience: Audience }) {
   async function toggle() {
     const next = !open;
     setOpen(next);
-    // Opening marks read: a badge that survives reading is noise.
+    // Opening marks read: a badge that survives reading is noise. The rows
+    // stay — only their unread marking goes.
     if (next) await openPanel();
+  }
+
+  async function onDismiss(eventId: string) {
+    const ok = await dismiss(eventId);
+    // The row has already come back by now if this failed; the toast explains
+    // why it reappeared, which is otherwise baffling.
+    if (!ok) show("Couldn't dismiss that. It's still here.", "error");
   }
 
   const ticketPath = audience === "customer" ? "/requests" : "/tickets";
@@ -54,9 +69,7 @@ export function NotificationBell({ audience }: { audience: Audience }) {
         aria-expanded={open}
         // The accessible name is the STATE, not the widget: a bare "Bell" tells
         // a screen-reader user nothing.
-        aria-label={
-          count === 0 ? "Notifications, none unread" : `Notifications, ${count} unread`
-        }
+        aria-label={count === 0 ? "Notifications, none unread" : `Notifications, ${count} unread`}
         className="relative cursor-pointer rounded-sm p-1.5 text-text-inverse/90 hover:bg-text-inverse/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         <Bell aria-hidden strokeWidth={1.5} className="size-5" />
@@ -75,8 +88,8 @@ export function NotificationBell({ audience }: { audience: Audience }) {
       </span>
 
       {open && (
-        <div className="absolute right-0 z-20 mt-2 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-sm border border-border bg-surface shadow-lg">
-          <p className="border-b border-border px-3 py-2 text-sm font-medium text-text">
+        <div className="absolute right-0 z-20 mt-2 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-sm border border-border bg-surface shadow-lg">
+          <p className="border-b border-border bg-gradient-header px-3 py-2 text-sm font-medium text-text-inverse">
             Notifications
           </p>
 
@@ -103,25 +116,72 @@ export function NotificationBell({ audience }: { audience: Audience }) {
             </div>
           )}
 
-          <ul className="max-h-80 overflow-y-auto">
-            {items.map((item) => (
-              <li key={item.event_id}>
+          <ul className="max-h-96 overflow-y-auto">
+            {items.slice(0, PANEL_LIMIT).map((item) => (
+              <li
+                key={item.event_id}
+                className="group relative flex items-start border-b border-border last:border-b-0 hover:bg-canvas"
+              >
                 <Link
                   href={`${ticketPath}/${item.ticket_id}`}
                   onClick={() => setOpen(false)}
-                  className="flex min-h-10 flex-col gap-0.5 border-b border-border px-3 py-2 last:border-b-0 hover:bg-canvas"
+                  className="flex min-h-10 flex-1 flex-col gap-0.5 py-2 pl-3 pr-9"
                 >
-                  <span className="text-sm text-text">
-                    {notificationSentence(item, audience)}
+                  <span className="flex items-start gap-1.5">
+                    {/* Weight carries the unread state as well as the dot, so it
+                        survives greyscale and colour blindness. */}
+                    {!item.read && (
+                      <span
+                        aria-hidden
+                        className="mt-1.5 size-1.5 shrink-0 rounded-full bg-structure"
+                      />
+                    )}
+                    <span
+                      className={
+                        item.read ? "text-sm text-text/80" : "text-sm font-medium text-text"
+                      }
+                    >
+                      {notificationSentence(item, audience)}
+                      {!item.read && <span className="sr-only"> — unread</span>}
+                    </span>
                   </span>
-                  <span className="truncate text-xs text-text/60">{item.ticket_subject}</span>
-                  <time dateTime={item.created_at} className="text-xs text-text/50">
+                  <span className="truncate pl-3 text-xs text-text/60">{item.ticket_subject}</span>
+                  <time dateTime={item.created_at} className="pl-3 text-xs text-text/50">
                     {formatDateTime(item.created_at)}
                   </time>
                 </Link>
+
+                {/* Named, not a bare "×": a screen reader announcing "button, X"
+                    seven times running says nothing about which one. Revealed on
+                    hover AND focus — hover-only would put it out of reach of the
+                    keyboard entirely. */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    void dismiss(item.event_id);
+                  }}
+                  aria-label={`Dismiss — ${notificationSentence(item, audience)}`}
+                  className="absolute right-1 top-1 cursor-pointer rounded-sm p-1.5 bg-blue-900 text-white opacity-0 transition-opacity hover:bg-blue-800 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent group-hover:opacity-100"
+                >
+                  <X aria-hidden strokeWidth={1.5} className="size-3.5" />
+                </button>
               </li>
             ))}
           </ul>
+
+          {/* Not shown when the panel is empty: the page applies the same
+              visibility rules, so it would lead somewhere equally empty — and
+              the empty state is deliberately CTA-free. */}
+          {items.length > 0 && (
+            <Link
+              href={notificationsPath(audience)}
+              onClick={() => setOpen(false)}
+              className="block border-t border-border px-3 py-2 text-center text-xs text-structure hover:bg-canvas hover:underline"
+            >
+              See all notifications
+            </Link>
+          )}
         </div>
       )}
     </div>

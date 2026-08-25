@@ -19,7 +19,8 @@ export type IconName =
   | "dashboard"
   | "users"
   | "settings"
-  | "archive";
+  | "archive"
+  | "bell";
 
 export interface NavItem {
   href: string;
@@ -31,21 +32,27 @@ const NAV: Record<Role, NavItem[]> = {
   CUSTOMER: [
     { href: "/requests/new", label: "New request", icon: "plus" },
     { href: "/requests", label: "My requests", icon: "ticket" },
+    // "Updates", not "Notifications" — the customer vocabulary, the same
+    // two-audience rule labels.ts follows.
+    { href: "/updates", label: "Updates", icon: "bell" },
   ],
   AGENT: [
     { href: "/queue", label: "My queue", icon: "inbox" },
     { href: "/tickets", label: "Tickets", icon: "ticket" },
+    { href: "/notifications", label: "Notifications", icon: "bell" },
   ],
   DISPATCHER: [
     { href: "/unassigned", label: "Unassigned", icon: "inbox" },
     { href: "/tickets", label: "All tickets", icon: "ticket" },
     { href: "/overdue", label: "Overdue", icon: "alert" },
+    { href: "/notifications", label: "Notifications", icon: "bell" },
   ],
   ADMIN: [
     { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
     { href: "/tickets", label: "All tickets", icon: "ticket" },
     { href: "/overdue", label: "Overdue", icon: "archive" },
     { href: "/users", label: "Users", icon: "users" },
+    { href: "/notifications", label: "Notifications", icon: "bell" },
     { href: "/configuration", label: "Configuration", icon: "settings" },
   ],
 };

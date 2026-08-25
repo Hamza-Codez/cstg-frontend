@@ -78,6 +78,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tickets/bulk/assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk Assign
+         * @description Assign multiple tickets in a single request.
+         *
+         *     Capacity is evaluated per item as the batch proceeds, not once up front.
+         */
+        post: operations["bulk_assign_api_v1_tickets_bulk_assignment_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/bulk/transitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk Transition
+         * @description Transition multiple tickets. Only transition to CLOSED is permitted.
+         */
+        post: operations["bulk_transition_api_v1_tickets_bulk_transitions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/bulk/reassignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk Reassign
+         * @description Reassign an agent's queue.
+         *
+         *     Selection is server-side by current assignee and statuses.
+         */
+        post: operations["bulk_reassign_api_v1_tickets_bulk_reassignment_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tickets": {
         parameters: {
             query?: never;
@@ -547,7 +611,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Notifications */
+        /**
+         * List Notifications
+         * @description Recent notifications, **read and unread**, newest first.
+         *
+         *     Keyset-paginated on `(created_at, id)` like every other list in this API —
+         *     no OFFSET, so a page neither skips nor repeats when new events arrive
+         *     mid-scroll, which on an append-only log they constantly do.
+         */
         get: operations["list_notifications_api_v1_notifications_get"];
         put?: never;
         post?: never;
@@ -591,6 +662,59 @@ export interface paths {
         put?: never;
         /** Mark Read */
         post: operations["mark_read_api_v1_notifications_read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/{event_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Dismiss Notification
+         * @description Hide one notification from the caller's own feed.
+         *
+         *     The `ticket_event` behind it is **not** deleted — it cannot be, and should
+         *     not be. It is the audit log, and one person tidying their inbox must not
+         *     erase a record the whole system depends on. Only this principal's view
+         *     changes; everyone else still sees it.
+         *
+         *     An event the caller may not see returns **404**, identical to one that does
+         *     not exist. Anything that distinguished the two would let a caller enumerate
+         *     event ids (INV-9). Repeat calls are 204.
+         */
+        delete: operations["dismiss_notification_api_v1_notifications__event_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/clear": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clear Notifications
+         * @description Empty the caller's feed up to now.
+         *
+         *     Stored as a timestamp rather than a dismissal row per notification: the
+         *     latter is an unbounded write inside a request handler, in the process that
+         *     also hosts the SLA monitor. Events created afterwards arrive normally.
+         */
+        post: operations["clear_notifications_api_v1_notifications_clear_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -714,6 +838,68 @@ export interface components {
             /** File */
             file: string;
         };
+        /** BulkAssignmentRequest */
+        BulkAssignmentRequest: {
+            /** Ticket Ids */
+            ticket_ids: string[];
+            /**
+             * Assignee Id
+             * Format: uuid
+             */
+            assignee_id: string;
+            /**
+             * Override Capacity
+             * @default false
+             */
+            override_capacity: boolean;
+        };
+        /** BulkItemResult */
+        BulkItemResult: {
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
+            /** Ok */
+            ok: boolean;
+            error?: components["schemas"]["ErrorDetail"] | null;
+        };
+        /** BulkReassignmentRequest */
+        BulkReassignmentRequest: {
+            /**
+             * From Assignee Id
+             * Format: uuid
+             */
+            from_assignee_id: string;
+            /**
+             * To Assignee Id
+             * Format: uuid
+             */
+            to_assignee_id: string;
+            /** Statuses */
+            statuses?: components["schemas"]["TicketStatus"][];
+        };
+        /** BulkResult */
+        BulkResult: {
+            /** Requested */
+            requested: number;
+            /** Succeeded */
+            succeeded: number;
+            /** Failed */
+            failed: number;
+            /** Results */
+            results: components["schemas"]["BulkItemResult"][];
+        };
+        /** BulkTransitionRequest */
+        BulkTransitionRequest: {
+            /** Ticket Ids */
+            ticket_ids: string[];
+            /**
+             * To
+             * @constant
+             */
+            to: "CLOSED";
+        };
         /**
          * Category
          * @enum {string}
@@ -830,6 +1016,20 @@ export interface components {
              * @constant
              */
             database: "reachable";
+        };
+        /** ErrorDetail */
+        ErrorDetail: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+            /**
+             * Details
+             * @default {}
+             */
+            details: {
+                [key: string]: unknown;
+            };
         };
         /**
          * EventType
@@ -958,8 +1158,19 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Read
+             * @default false
+             */
+            read: boolean;
         };
-        /** NotificationPage */
+        /**
+         * NotificationPage
+         * @description Recent notifications, read and unread.
+         *
+         *     Read and unread together since P21: the panel is a history, not a queue, so
+         *     opening it no longer empties it.
+         */
         NotificationPage: {
             /** Items */
             items: components["schemas"]["NotificationItem"][];
@@ -970,6 +1181,8 @@ export interface components {
              * Format: date-time
              */
             last_read_at: string;
+            /** Next Cursor */
+            next_cursor?: string | null;
         };
         /** PaginatedTicketResponse */
         PaginatedTicketResponse: {
@@ -1512,6 +1725,105 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CustomerResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_assign_api_v1_tickets_bulk_assignment_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkAssignmentRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_transition_api_v1_tickets_bulk_transitions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkTransitionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_reassign_api_v1_tickets_bulk_reassignment_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkReassignmentRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResult"];
                 };
             };
             /** @description Validation Error */
@@ -2363,6 +2675,7 @@ export interface operations {
         parameters: {
             query?: {
                 limit?: number;
+                cursor?: string | null;
             };
             header?: never;
             path?: never;
@@ -2439,6 +2752,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dismiss_notification_api_v1_notifications__event_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clear_notifications_api_v1_notifications_clear_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationCount"];
                 };
             };
         };
