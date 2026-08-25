@@ -20,23 +20,34 @@ import { FilterBar } from "@/components/tickets/filters";
 import { QueueView } from "@/components/tickets/queue-view";
 import { SavedViews } from "@/components/tickets/saved-views";
 import { listSavedViews } from "@/lib/api/saved-views";
+import { listActiveAgents } from "@/lib/api/tickets";
 import { getSession } from "@/lib/auth/session";
 import { parseFilters, type TicketFilterValues } from "@/lib/filters";
 import { loadQueue } from "@/lib/staff-queue";
+import type { UserSummary } from "@/lib/types";
 
 export async function FilteredQueue({
   title,
   empty,
   searchParams,
   baseFilters = {},
+  selectable = false,
 }: {
   title: string;
   empty: string;
   searchParams: Record<string, string | string[] | undefined>;
   baseFilters?: TicketFilterValues;
+  selectable?: boolean;
 }) {
   const session = await getSession();
   if (!session) redirect("/sign-in");
+  // Every queue built on this is a staff surface, and `QueueView` types its
+  // role as `StaffRole` for that reason. Narrowing here rather than casting:
+  // the route-group layouts already redirect a customer away, so this only
+  // fires if one is ever reachable — in which case sending them to their own
+  // requests is the right answer, not rendering a staff table at them.
+  if (session.role === "CUSTOMER") redirect("/requests");
+  const staffRole = session.role;
 
   const urlFilters = parseFilters(searchParams);
   const { tickets, error } = await loadQueue({ ...urlFilters, ...baseFilters });
@@ -45,6 +56,14 @@ export async function FilteredQueue({
   // the list down with it.
   const saved = await listSavedViews(session.token);
   const views = saved.ok ? saved.data.items : [];
+
+  let agents: UserSummary[] = [];
+  if (selectable && (session.role === "DISPATCHER" || session.role === "ADMIN")) {
+    const agentsRes = await listActiveAgents(session.token);
+    if (agentsRes.ok) {
+      agents = agentsRes.data.items;
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -64,7 +83,15 @@ export async function FilteredQueue({
         }
       />
       <div className="flex flex-col gap-2">
-        <QueueView title={title} tickets={tickets} empty={empty} error={error} />
+        <QueueView
+          title={title}
+          tickets={tickets}
+          empty={empty}
+          error={error}
+          role={staffRole}
+          selectable={selectable}
+          agents={agents}
+        />
       </div>
     </div>
   );

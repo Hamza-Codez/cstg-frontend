@@ -163,14 +163,12 @@ export function NotificationBell({ audience }: { audience: Audience }) {
                     make dismissal unreachable on a phone entirely. */}
                 <button
                   type="button"
-                  onClick={(event) => {
-                    // The row is a link; without this a dismissal would also
-                    // navigate to the ticket it just removed.
-                    event.preventDefault();
+                  onClick={(e) => {
+                    e.preventDefault();
                     void onDismiss(item.event_id);
                   }}
                   aria-label={`Dismiss — ${notificationSentence(item, audience)}`}
-                  className="absolute right-1 top-1 cursor-pointer rounded-sm border border-control-border bg-control p-1.5 text-text-inverse transition-colors hover:bg-control-hover hover:border-control-border-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                  className="absolute right-1 top-1 cursor-pointer rounded-sm border border-control-border bg-control p-0.5 text-text-inverse transition-colors hover:bg-control-hover hover:border-control-border-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
                 >
                   <X aria-hidden strokeWidth={1.5} className="size-3.5" />
                 </button>
