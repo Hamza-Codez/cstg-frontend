@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 
+import { isStaleActionMessage as isStaleAction } from "./stale-action";
+
 /**
  * The stale-action detector decides whether the boundary self-heals or shows a
  * message, so it is worth pinning down independently of React.
+ *
+ * This used to carry its own copy of the predicate, so it could keep passing
+ * while `app/error.tsx` drifted. It now imports the shipped one — and it lives
+ * here rather than under `src/app/`, which `next build` walks (see
+ * `no-tests-in-app.test.ts`).
  */
-function isStaleAction(message: string): boolean {
-  return /server action/i.test(message) && /not\s*(be\s*)?found/i.test(message);
-}
 
 describe("stale Server Action detection", () => {
   it("recognises the error Next actually throws", () => {

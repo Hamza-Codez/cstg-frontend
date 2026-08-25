@@ -29,16 +29,20 @@ export function Stat({
   accent?: StatAccent;
 }) {
   return (
-    <div className="overflow-hidden rounded-sm border border-border bg-gradient-sidebar shadow-sm">
+    // `h-full` + column flex so tiles in a row are the same height. Without it a
+    // label that wraps to two lines makes its header band taller, which pushes
+    // that tile's number below its neighbours' — a row of hero numbers that do
+    // not sit on one line reads as a rendering fault.
+    <div className="flex h-full flex-col overflow-hidden rounded-sm border border-border bg-gradient-sidebar shadow-sm">
       {/* The accent color applied as the header background instead of a top line. */}
-      <div className={cn("px-4 py-1.5", BAR[accent])}>
-        <span className="text-xs font-medium text-text-inverse">{label}</span>
+      <div className={cn("flex min-h-9 items-center px-4 py-1.5", BAR[accent])}>
+        <span className="text-xs font-medium leading-tight text-text-inverse">{label}</span>
       </div>
-      <div className="flex flex-col gap-0.5 px-4 pb-3 pt-2">
+      <div className="flex flex-1 flex-col gap-0.5 px-4 pb-3 pt-2">
         <span className="text-2xl font-medium tabular-nums text-text-inverse">
           {value}
         </span>
-        {hint && <span className="text-xs text-text-inverse">{hint}</span>}
+        {hint && <span className="text-xs leading-tight text-text-inverse">{hint}</span>}
       </div>
     </div>
   );

@@ -155,7 +155,11 @@ async function OverviewTab({ token }: { token: string }) {
         {total} tickets total · {active} still active
       </p>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+      {/* Four across, not seven. Seven tiles on a 1440px screen leaves each
+          about 150px, which wraps "Average time to resolve" onto three lines
+          and makes the row unreadable. Two rows of four and three is the
+          honest fit for the number of measures this now carries. */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Open" value={String(m.open)} accent="structure" />
         <Stat label="In progress" value={String(m.in_progress)} accent="structure" />
         {/* Without this tile the status counts stop summing to the total, and a

@@ -138,21 +138,25 @@ export function DateRange({ tab }: { tab: string }) {
           </>
         )}
 
-        <Control label="Grouped by">
-          <Choice
-            label="Grouped by"
-            value={range.bucket}
-            options={BUCKETS}
-            onChange={(bucket: MetricBucket) => push({ bucket })}
-          />
-        </Control>
+        {/* Only Trends buckets anything. Offering the control on Overview and
+            Agents implies it changes those numbers, and it does not. */}
+        {tab === "trends" && (
+          <Control label="Grouped by">
+            <Choice
+              label="Grouped by"
+              value={range.bucket}
+              options={BUCKETS}
+              onChange={(bucket: MetricBucket) => push({ bucket })}
+            />
+          </Control>
+        )}
 
         <p className="min-h-10 self-end py-2 text-xs text-text/60">{describeRange(range)}</p>
       </div>
 
       {/* Named limit, named remedy. "Too many buckets" would tell the user
           nothing they can act on. */}
-      {over && (
+      {over && tab === "trends" && (
         <p role="status" className="text-xs text-overdue">
           That range is more than 366 {range.bucket === "day" ? "days" : `${range.bucket}s`}.
           Narrow the dates, or group by a longer period.

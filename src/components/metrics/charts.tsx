@@ -229,7 +229,12 @@ export function TrendChart({
             ]}
           />
           <Line
-            type="monotone"
+            // Straight segments, not a spline. `monotone` draws a smooth ramp
+            // between two measured days, which invents a shape for hours nobody
+            // counted — the same misreporting as interpolating across a gap,
+            // just prettier. Especially visible on a zero-heavy series, where a
+            // curve turns a single busy day into a three-day swell.
+            type="linear"
             dataKey="value"
             name={seriesLabel}
             stroke="var(--chart-1)"

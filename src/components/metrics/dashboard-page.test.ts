@@ -14,6 +14,12 @@ import { describe, expect, it } from "vitest";
  * What is guarded here are decisions visible in the code and easy to undo by
  * accident — a dropped status tile, an averages pair that stops being
  * distinguishable, an export button that loses its role gate.
+ *
+ * **It lives here, not beside the page.** `next build` walks `src/app/` when it
+ * collects page data, and a test file in that tree importing `node:fs` at module
+ * scope fails the production build with a bare `Cannot find module for page:
+ * /_document`. `no-tests-in-app.test.ts` guards the rule; this comment records
+ * why it exists.
  */
 const SOURCE = readFileSync(resolve("src/app/(staff)/dashboard/page.tsx"), "utf8");
 
