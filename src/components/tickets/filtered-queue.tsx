@@ -48,6 +48,14 @@ export async function FilteredQueue({
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h1 className="text-xl font-medium">{title}</h1>
+        {/* The export carries the URL's filters, so it always matches what is
+            on screen — the backend accepts the same filter set for exactly
+            that reason (spec09 §6). Admin-only, matching the endpoint: absent
+            for other roles rather than present and 403ing. */}
+        {session.role === "ADMIN" && <ExportButton />}
+      </div>
       <FilterBar
         role={session.role}
         resultCount={tickets.length}
@@ -56,15 +64,6 @@ export async function FilteredQueue({
         }
       />
       <div className="flex flex-col gap-2">
-        {/* The export carries the URL's filters, so it always matches what is
-            on screen — the backend accepts the same filter set for exactly
-            that reason (spec09 §6). Admin-only, matching the endpoint: absent
-            for other roles rather than present and 403ing. */}
-        {session.role === "ADMIN" && (
-          <div className="flex justify-end">
-            <ExportButton />
-          </div>
-        )}
         <QueueView title={title} tickets={tickets} empty={empty} error={error} />
       </div>
     </div>

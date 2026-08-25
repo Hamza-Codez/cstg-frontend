@@ -148,7 +148,7 @@ export function readRange(
 /** Restate a range in prose, for the empty state and the caption. */
 export function describeRange(range: Range): string {
   const fmt = (at: Date) =>
-    at.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    at.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
   // `to` is exclusive, so the last day shown is the one before it.
   return `${fmt(range.from)} – ${fmt(new Date(range.to.getTime() - DAY_MS))}`;
 }

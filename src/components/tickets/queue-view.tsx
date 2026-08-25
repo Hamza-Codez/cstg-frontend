@@ -18,7 +18,6 @@ export function QueueView({
 }) {
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-medium">{title}</h1>
       {error ? (
         <Card>
           <CardBody>
