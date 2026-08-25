@@ -72,7 +72,16 @@ describe("the two averages", () => {
 
 describe("export", () => {
   it("is gated on ADMIN rather than rendered and left to 403", () => {
-    expect(SOURCE).toContain('session.role === "ADMIN" && <ExportButton />');
+    expect(SOURCE).toContain('session.role === "ADMIN" && <ExportButton');
+  });
+});
+
+describe("the accent", () => {
+  it("appears on no stat tile", () => {
+    // CTA-only. `StatAccent` no longer offers it, so this is belt and braces —
+    // and it fails clearly if someone reaches for a raw class instead.
+    expect(SOURCE).not.toContain('accent="accent"');
+    expect(SOURCE).not.toContain("gradient-accent");
   });
 });
 

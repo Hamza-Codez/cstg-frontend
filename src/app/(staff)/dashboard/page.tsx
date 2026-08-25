@@ -176,20 +176,20 @@ async function OverviewTab({ token }: { token: string }) {
           hint="open past deadline"
           accent={m.breached_open > 0 ? "overdue" : "on-track"}
         />
-        <Stat label="Breach rate" value={percent(m.breach_rate)} accent="accent" />
+        <Stat label="Breach rate" value={percent(m.breach_rate)} accent="structure" />
         {/* Two averages side by side, and the labels have to do the work of
             keeping them apart — one is always the smaller of the two. */}
         <Stat
           label="Average time to resolve"
           value={readableDuration(m.avg_resolution_seconds)}
           hint="arrival to resolution"
-          accent="accent"
+          accent="structure"
         />
         <Stat
           label="Average working time"
           value={readableDuration(m.avg_working_seconds)}
           hint="excludes waiting on customer"
-          accent="accent"
+          accent="structure"
         />
       </div>
 

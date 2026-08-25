@@ -8,11 +8,23 @@
 
 import { cn } from "@/lib/cn";
 
-export type StatAccent = "structure" | "accent" | "overdue" | "on-track";
+/**
+ * **No `accent` here, deliberately.**
+ *
+ * The accent gold is CTA-only (docs/UIUX_FRONTEND.md §2.1) and a stat tile is
+ * never a call to action — it is a number. Three tiles wore it until P20, and
+ * with seven tiles on the screen the gold row ended up competing with the
+ * Export CSV button for "this is the action", which is exactly the signal the
+ * rule exists to protect.
+ *
+ * Leaving it out of the union rather than merely not using it: a convention
+ * gets re-broken, a type does not.
+ */
+export type StatAccent = "structure" | "overdue" | "on-track";
 
 const BAR: Record<StatAccent, string> = {
   structure: "bg-gradient-structure",
-  accent: "bg-gradient-accent",
+  // Sanctioned: these two are status colours and this is a status.
   overdue: "bg-overdue",
   "on-track": "bg-on-track",
 };

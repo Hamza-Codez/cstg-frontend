@@ -75,6 +75,9 @@ export function ExportButton() {
   }
 
   return (
+    // Secondary, not primary. `.bg-gradient-primary` is a translucent grey
+    // written by hand in globals.css, and on the dashboard's pale canvas it
+    // reads as a disabled control rather than a call to action.
     <Button variant="secondary" onClick={() => void run()} disabled={pending}>
       <Download aria-hidden className="size-4" strokeWidth={1.5} />
       {/* Streaming gives no progress, so the copy sets the expectation rather
