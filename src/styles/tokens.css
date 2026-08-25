@@ -16,11 +16,24 @@
   --color-accent-hover: #a98b52;
 
   --color-text: #2c3947; /* body text: 10.0:1 on canvas, 11.8:1 on white */
+  /* Secondary text — subjects, timestamps, hints. A REAL token rather than
+   * `text-text/60`, because the Tailwind colours here are plain `var(--x)` with
+   * no `<alpha-value>`, so every `/NN` modifier silently compiles to nothing.
+   * Those look fine on a light page only because text inherits the dark body
+   * colour; inside the dark chrome they inherit white and vanish. 4.75:1 on
+   * white, so it passes AA on its own rather than by luck. */
+  --color-text-muted: #6b747e;
   --color-text-inverse: #ffffff; /* text on structure/header fills */
   /* White on the gold accent is 2.36:1 — unreadable. Text sitting ON the accent
    * uses the dark ink instead (4.99:1, passes AA). */
   --color-text-on-accent: #2c3947;
   --color-border: #cfd8e1;
+  /* Scrollbar thumb. Distinct from `--color-border`, which at #cfd8e1 is a
+   * hairline meant for dividers and disappears entirely as a scrollbar — a
+   * scrollbar you cannot see is not a scrollbar. Quiet enough not to compete
+   * with content, present enough to grab. */
+  --color-scrollbar: #a7b5c4;
+  --color-scrollbar-hover: #7e90a3;
 
   /* ── Chrome ──────────────────────────────────────────────────────────────── */
   --color-header: #2c3947; /* dark bar; white on it is 11.8:1 */
@@ -29,6 +42,27 @@
   --gradient-sidebar: linear-gradient(180deg, #2c3947 0%, #40596f 55%, #547a95 100%);
   --gradient-accent: linear-gradient(90deg, #c2a56d 0%, #d8bd8b 100%);
   --gradient-structure: linear-gradient(90deg, #547a95 0%, #7a9db8 100%);
+  /* Neutral chrome control on a dark bar — canvas stepped into border, both
+   * existing palette values. Carries the dark ink (10.0:1), never white. */
+  --gradient-muted: linear-gradient(to bottom right, #f4f4f5, #e5e7eb);
+  --gradient-muted-hover: linear-gradient(to bottom right, #e4e4e7, #d1d5db);
+  /* Ink carried ON the muted gradient — 15.2:1, never white. */
+  --color-control-ink: #27272a;
+
+  /* ── Solid controls ──────────────────────────────────────────────────────
+   * Dark neutral and dark danger fills for secondary actions in dense views
+   * (table row actions, staff activate/deactivate). Distinct from the accent,
+   * which stays reserved for the single primary action in a view (§2.1).
+   * Both carry white text: 14.1:1 and 10.3:1. */
+  --color-control: #1e293b;
+  --color-control-hover: #334155;
+  --color-control-border: #334155;
+  --color-control-border-hover: #475569;
+
+  --color-danger-solid: #7f1d1d;
+  --color-danger-solid-hover: #991b1b;
+  --color-danger-solid-border: #991b1b;
+  --color-danger-solid-border-hover: #b91c1c;
 
   /* ── Functional signalling ───────────────────────────────────────────────── */
   /* Indicator-only: dots, thin bars, badge text. Never fills, never large areas. */

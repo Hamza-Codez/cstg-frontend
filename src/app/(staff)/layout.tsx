@@ -17,7 +17,7 @@ export default async function StaffLayout({ children }: { children: ReactNode })
   if (session.principalType !== "USER") redirect(landingFor(session.role));
 
   return (
-    <AppShell nav={navFor(session.role)} subtitle={roleLabel(session.role)}>
+    <AppShell nav={navFor(session.role)} subtitle={roleLabel(session.role)} search>
       {children}
     </AppShell>
   );

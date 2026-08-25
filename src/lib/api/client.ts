@@ -6,7 +6,9 @@
  * nothing above this layer touches raw responses.
  */
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+export const API_BASE_URL = typeof window === "undefined"
+  ? (process.env.API_ORIGIN ?? "http://localhost:8000")
+  : "";
 
 /** Error codes from docs/API.md §2. */
 export type ApiErrorCode =

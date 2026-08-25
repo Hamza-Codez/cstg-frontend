@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import type { TicketStatus } from "@/lib/types";
 import { slaState, type SlaState } from "@/lib/sla";
 
 /**
@@ -15,10 +16,14 @@ export interface Countdown {
   remainingMs: number;
 }
 
-export function useSlaCountdown(deadlineIso: string, createdAtIso?: string): Countdown {
+export function useSlaCountdown(
+  dueAtIso: string,
+  createdAtIso?: string,
+  status?: TicketStatus,
+): Countdown {
   // Start from a deterministic value so the server render and the first client
   // render agree; the interval takes over immediately after mount.
-  const [now, setNow] = useState(() => new Date(deadlineIso).getTime());
+  const [now, setNow] = useState(() => new Date(dueAtIso).getTime());
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -28,9 +33,9 @@ export function useSlaCountdown(deadlineIso: string, createdAtIso?: string): Cou
     return () => clearInterval(id);
   }, []);
 
-  const deadline = new Date(deadlineIso).getTime();
+  const dueAt = new Date(dueAtIso).getTime();
   return {
-    state: mounted ? slaState(deadlineIso, now, createdAtIso) : "on-track",
-    remainingMs: deadline - now,
+    state: mounted ? slaState(dueAtIso, now, createdAtIso, status) : "on-track",
+    remainingMs: dueAt - now,
   };
 }

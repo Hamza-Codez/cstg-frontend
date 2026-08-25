@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/health/db": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Db Health */
+        get: operations["db_health_health_db_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -61,6 +78,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tickets/bulk/assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk Assign
+         * @description Assign multiple tickets in a single request.
+         *
+         *     Capacity is evaluated per item as the batch proceeds, not once up front.
+         */
+        post: operations["bulk_assign_api_v1_tickets_bulk_assignment_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/bulk/transitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk Transition
+         * @description Transition multiple tickets. Only transition to CLOSED is permitted.
+         */
+        post: operations["bulk_transition_api_v1_tickets_bulk_transitions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/bulk/reassignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk Reassign
+         * @description Reassign an agent's queue.
+         *
+         *     Selection is server-side by current assignee and statuses.
+         */
+        post: operations["bulk_reassign_api_v1_tickets_bulk_reassignment_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tickets": {
         parameters: {
             query?: never;
@@ -70,7 +151,11 @@ export interface paths {
         };
         /**
          * List Tickets
-         * @description Role-scoped list with filters and keyset pagination (docs/API.md §1, §4).
+         * @description Role-scoped search, filters and keyset pagination (docs/API.md §1, §4).
+         *
+         *     Filters a principal may not use are refused 403 by the service — never
+         *     silently dropped, which would answer a different question than the one asked
+         *     (spec04 §4).
          */
         get: operations["list_tickets_api_v1_tickets_get"];
         put?: never;
@@ -93,6 +178,29 @@ export interface paths {
         get: operations["get_ticket_api_v1_tickets__ticket_id__get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/{ticket_id}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Claim Ticket
+         * @description An agent takes an unassigned ticket (docs/API.md §6).
+         *
+         *     409 when someone else got there first — the normal outcome of two agents
+         *     scanning the same queue, not a fault.
+         */
+        post: operations["claim_ticket_api_v1_tickets__ticket_id__claim_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -158,7 +266,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List Attachments
+         * @description Attachments on a ticket (docs/API.md §8).
+         *
+         *     Not paginated — the per-ticket cap bounds the list.
+         */
+        get: operations["list_attachments_api_v1_tickets__ticket_id__attachments_get"];
         put?: never;
         /** Upload Attachment */
         post: operations["upload_attachment_api_v1_tickets__ticket_id__attachments_post"];
@@ -175,7 +289,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Download Attachment */
+        /**
+         * Download Attachment
+         * @description Stream the stored bytes.
+         *
+         *     StreamingResponse over the storage port rather than FileResponse over a
+         *     path: the port's contract is an opaque key, and a backend need not have a
+         *     filesystem for this route to work.
+         */
         get: operations["download_attachment_api_v1_tickets__ticket_id__attachments__attachment_id__get"];
         put?: never;
         post?: never;
@@ -235,9 +356,103 @@ export interface paths {
         };
         /**
          * Get Overview
-         * @description Get global and priority-scoped metrics (Admin only).
+         * @description Current-state metrics, globally and sliced by priority, tier and category.
+         *
+         *     Every enum member is present even at zero, so a dashboard never has to
+         *     branch on a missing key.
          */
         get: operations["get_overview_api_v1_metrics_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/metrics/timeseries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Timeseries
+         * @description Bucketed history, with **empty buckets emitted as zero**.
+         *
+         *     A chart that silently omits a quiet day draws a straight line through the
+         *     gap and misreports it as steady activity (spec09 §3).
+         *
+         *     Bucketing is UTC, matching the `timestamptz` storage. Timezone-aware
+         *     bucketing is out of scope; it is stated here so it is a known limitation
+         *     rather than an assumed feature. A range over 366 buckets is refused with
+         *     422 rather than truncated.
+         */
+        get: operations["get_timeseries_api_v1_metrics_timeseries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/metrics/agents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Agent Metrics
+         * @description Per-agent workload and performance over a period.
+         *
+         *     **Attribution is by current assignee**, and the response says so in
+         *     `attribution_note`. A reassigned ticket counts entirely toward whoever
+         *     holds it now; true attribution would mean reconstructing custody windows
+         *     from `ASSIGNMENT` events and apportioning time between holders. Shipping
+         *     the caveat in the payload is deliberate — an unlabelled approximation in a
+         *     performance metric is worse than no metric, because someone will manage
+         *     against it.
+         *
+         *     Inactive agents holding tickets in range are included, or the period's
+         *     totals stop reconciling with the overview.
+         */
+        get: operations["get_agent_metrics_api_v1_metrics_agents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/metrics/export/tickets.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Tickets Csv
+         * @description Export the ticket list as CSV.
+         *
+         *     **The same filter set as `GET /tickets`**, built from the same
+         *     `filter_predicates`, so an admin exports exactly the view they are looking
+         *     at rather than learning a second filter language.
+         *
+         *     Streamed over a server-side cursor: this process also hosts the SLA
+         *     monitor, and materialising a large export would stall breach detection.
+         *     Over `APP_EXPORT_MAX_ROWS` the request is refused with 422 — checked before
+         *     the first byte, because a streamed response cannot be turned back into an
+         *     error, and a truncated file that does not say so is a wrong answer.
+         *
+         *     No ticket body and no comment text: operational data, not a content dump.
+         */
+        get: operations["export_tickets_csv_api_v1_metrics_export_tickets_csv_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -286,6 +501,226 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/configuration/sla-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace Sla Policy
+         * @description Publish a new SLA policy version (docs/API.md §11).
+         *
+         *     The whole policy at once, because it must stay total. Affects **new tickets
+         *     only** — priority and deadline are frozen at creation (INV-1), so existing
+         *     tickets keep the terms they were created under.
+         */
+        put: operations["replace_sla_policy_api_v1_configuration_sla_policy_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/configuration/sla-policy/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sla Policy History
+         * @description Every version, newest first.
+         *
+         *     This is what makes a frozen deadline explainable: a ticket showing a
+         *     six-hour window when the config says eight is otherwise indistinguishable
+         *     from a bug.
+         */
+        get: operations["sla_policy_history_api_v1_configuration_sla_policy_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/configuration/assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Assignment
+         * @description Strategy and the auto-assign switch (docs/API.md §11).
+         */
+        put: operations["set_assignment_api_v1_configuration_assignment_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/saved-views": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Saved Views */
+        get: operations["list_saved_views_api_v1_saved_views_get"];
+        put?: never;
+        /** Create Saved View */
+        post: operations["create_saved_view_api_v1_saved_views_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/saved-views/{view_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Saved View */
+        delete: operations["delete_saved_view_api_v1_saved_views__view_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Notifications
+         * @description Recent notifications, **read and unread**, newest first.
+         *
+         *     Keyset-paginated on `(created_at, id)` like every other list in this API —
+         *     no OFFSET, so a page neither skips nor repeats when new events arrive
+         *     mid-scroll, which on an append-only log they constantly do.
+         */
+        get: operations["list_notifications_api_v1_notifications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Notification Count
+         * @description The badge-only path.
+         *
+         *     Separate from the list endpoint precisely so the frequent poll stays cheap;
+         *     the UI must not poll the list to derive a count.
+         */
+        get: operations["notification_count_api_v1_notifications_count_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Read */
+        post: operations["mark_read_api_v1_notifications_read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/{event_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Dismiss Notification
+         * @description Hide one notification from the caller's own feed.
+         *
+         *     The `ticket_event` behind it is **not** deleted — it cannot be, and should
+         *     not be. It is the audit log, and one person tidying their inbox must not
+         *     erase a record the whole system depends on. Only this principal's view
+         *     changes; everyone else still sees it.
+         *
+         *     An event the caller may not see returns **404**, identical to one that does
+         *     not exist. Anything that distinguished the two would let a caller enumerate
+         *     event ids (INV-9). Repeat calls are 204.
+         */
+        delete: operations["dismiss_notification_api_v1_notifications__event_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/clear": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clear Notifications
+         * @description Empty the caller's feed up to now.
+         *
+         *     Stored as a timestamp rather than a dismissal row per notification: the
+         *     latter is an unbounded write inside a request handler, in the process that
+         *     also hosts the SLA monitor. Events created afterwards arrive normally.
+         */
+        post: operations["clear_notifications_api_v1_notifications_clear_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -295,6 +730,46 @@ export interface components {
          * @enum {string}
          */
         ActorType: "CUSTOMER" | "USER" | "SYSTEM";
+        /** AgentMetrics */
+        AgentMetrics: {
+            agent: components["schemas"]["AgentSummary"];
+            /** Open Tickets */
+            open_tickets: number;
+            /** In Progress */
+            in_progress: number;
+            /** Pending Customer */
+            pending_customer: number;
+            /** Resolved In Period */
+            resolved_in_period: number;
+            /** Sla Met Rate */
+            sla_met_rate: number;
+            /** Avg Working Seconds */
+            avg_working_seconds: number;
+            /** Current Load Pct */
+            current_load_pct: number | null;
+        };
+        /** AgentMetricsResponse */
+        AgentMetricsResponse: {
+            /** Items */
+            items: components["schemas"]["AgentMetrics"][];
+            /**
+             * Attribution Note
+             * @default Tickets count toward whoever is assigned to them now. Reassigned tickets count entirely toward their current owner.
+             */
+            attribution_note: string;
+        };
+        /** AgentSummary */
+        AgentSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Is Active */
+            is_active: boolean;
+        };
         /**
          * AssigneeSummary
          * @description Just enough to name the owner; never exposes staff email or role.
@@ -315,6 +790,24 @@ export interface components {
              * Format: uuid
              */
             assignee_id: string;
+            /**
+             * Override Capacity
+             * @default false
+             */
+            override_capacity: boolean;
+        };
+        /**
+         * AssignmentSettings
+         * @description How new tickets are routed (spec07 §6).
+         */
+        AssignmentSettings: {
+            /**
+             * Strategy
+             * @enum {string}
+             */
+            strategy: "MANUAL" | "ROUND_ROBIN" | "LEAST_LOADED";
+            /** Auto Assign On Create */
+            auto_assign_on_create: boolean;
         };
         /** AttachmentResponse */
         AttachmentResponse: {
@@ -345,11 +838,85 @@ export interface components {
             /** File */
             file: string;
         };
+        /** BulkAssignmentRequest */
+        BulkAssignmentRequest: {
+            /** Ticket Ids */
+            ticket_ids: string[];
+            /**
+             * Assignee Id
+             * Format: uuid
+             */
+            assignee_id: string;
+            /**
+             * Override Capacity
+             * @default false
+             */
+            override_capacity: boolean;
+        };
+        /** BulkItemResult */
+        BulkItemResult: {
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
+            /** Ok */
+            ok: boolean;
+            error?: components["schemas"]["ErrorDetail"] | null;
+        };
+        /** BulkReassignmentRequest */
+        BulkReassignmentRequest: {
+            /**
+             * From Assignee Id
+             * Format: uuid
+             */
+            from_assignee_id: string;
+            /**
+             * To Assignee Id
+             * Format: uuid
+             */
+            to_assignee_id: string;
+            /** Statuses */
+            statuses?: components["schemas"]["TicketStatus"][];
+        };
+        /** BulkResult */
+        BulkResult: {
+            /** Requested */
+            requested: number;
+            /** Succeeded */
+            succeeded: number;
+            /** Failed */
+            failed: number;
+            /** Results */
+            results: components["schemas"]["BulkItemResult"][];
+        };
+        /** BulkTransitionRequest */
+        BulkTransitionRequest: {
+            /** Ticket Ids */
+            ticket_ids: string[];
+            /**
+             * To
+             * @constant
+             */
+            to: "CLOSED";
+        };
         /**
          * Category
          * @enum {string}
          */
         Category: "OUTAGE" | "BILLING" | "TECHNICAL" | "GENERAL";
+        /** CommentAuthor */
+        CommentAuthor: {
+            /** Type */
+            type: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
         /** CommentCreate */
         CommentCreate: {
             type: components["schemas"]["CommentType"];
@@ -368,11 +935,7 @@ export interface components {
              * Format: uuid
              */
             ticket_id: string;
-            /**
-             * Author Id
-             * Format: uuid
-             */
-            author_id: string;
+            author: components["schemas"]["CommentAuthor"];
             type: components["schemas"]["CommentType"];
             /** Body */
             body: string;
@@ -393,6 +956,8 @@ export interface components {
             priority_rules: components["schemas"]["PriorityRuleEntry"][];
             /** Sla Durations */
             sla_durations: components["schemas"]["SlaDurationEntry"][];
+            sla_policy: components["schemas"]["SlaPolicySummary"];
+            assignment: components["schemas"]["AssignmentSettings"];
         };
         /**
          * CustomerCreate
@@ -439,11 +1004,64 @@ export interface components {
          * @enum {string}
          */
         CustomerTier: "ENTERPRISE" | "BUSINESS" | "FREE";
+        /** DbHealthResponse */
+        DbHealthResponse: {
+            /**
+             * Status
+             * @constant
+             */
+            status: "ok";
+            /**
+             * Database
+             * @constant
+             */
+            database: "reachable";
+        };
+        /** ErrorDetail */
+        ErrorDetail: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+            /**
+             * Details
+             * @default {}
+             */
+            details: {
+                [key: string]: unknown;
+            };
+        };
         /**
          * EventType
          * @enum {string}
          */
-        EventType: "CREATED" | "STATUS_CHANGE" | "ASSIGNMENT" | "COMMENT" | "SLA_BREACH";
+        EventType: "CREATED" | "STATUS_CHANGE" | "ASSIGNMENT" | "COMMENT" | "SLA_BREACH" | "ATTACHMENT";
+        /**
+         * GroupMetrics
+         * @description One slice of the ticket population, by priority, tier or category.
+         */
+        GroupMetrics: {
+            /** Open */
+            open: number;
+            /** In Progress */
+            in_progress: number;
+            /** Pending Customer */
+            pending_customer: number;
+            /** Resolved */
+            resolved: number;
+            /** Closed */
+            closed: number;
+            /** Breached Open */
+            breached_open: number;
+            /** Breach Rate */
+            breach_rate: number;
+            /** Avg Resolution Seconds */
+            avg_resolution_seconds: number;
+            /** Avg Working Seconds */
+            avg_working_seconds: number;
+            /** Sla Met Rate */
+            sla_met_rate: number;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -467,12 +1085,19 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** MarkReadRequest */
+        MarkReadRequest: {
+            /** Up To */
+            up_to?: string | null;
+        };
         /** MetricsOverview */
         MetricsOverview: {
             /** Open */
             open: number;
             /** In Progress */
             in_progress: number;
+            /** Pending Customer */
+            pending_customer: number;
             /** Resolved */
             resolved: number;
             /** Closed */
@@ -483,10 +1108,81 @@ export interface components {
             breach_rate: number;
             /** Avg Resolution Seconds */
             avg_resolution_seconds: number;
+            /** Avg Working Seconds */
+            avg_working_seconds: number;
+            /** Sla Met Rate */
+            sla_met_rate: number;
             /** By Priority */
             by_priority: {
-                [key: string]: components["schemas"]["PriorityMetrics"];
+                [key: string]: components["schemas"]["GroupMetrics"];
             };
+            /** By Tier */
+            by_tier: {
+                [key: string]: components["schemas"]["GroupMetrics"];
+            };
+            /** By Category */
+            by_category: {
+                [key: string]: components["schemas"]["GroupMetrics"];
+            };
+        };
+        /**
+         * NotificationCount
+         * @description The cheap badge-only shape, so the frequent poll stays small.
+         */
+        NotificationCount: {
+            /** Unread Count */
+            unread_count: number;
+        };
+        /** NotificationItem */
+        NotificationItem: {
+            /**
+             * Event Id
+             * Format: uuid
+             */
+            event_id: string;
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
+            /** Ticket Subject */
+            ticket_subject: string;
+            type: components["schemas"]["EventType"];
+            actor_type: components["schemas"]["ActorType"];
+            /** Actor Name */
+            actor_name?: string | null;
+            from_status?: components["schemas"]["TicketStatus"] | null;
+            to_status?: components["schemas"]["TicketStatus"] | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Read
+             * @default false
+             */
+            read: boolean;
+        };
+        /**
+         * NotificationPage
+         * @description Recent notifications, read and unread.
+         *
+         *     Read and unread together since P21: the panel is a history, not a queue, so
+         *     opening it no longer empties it.
+         */
+        NotificationPage: {
+            /** Items */
+            items: components["schemas"]["NotificationItem"][];
+            /** Unread Count */
+            unread_count: number;
+            /**
+             * Last Read At
+             * Format: date-time
+             */
+            last_read_at: string;
+            /** Next Cursor */
+            next_cursor?: string | null;
         };
         /** PaginatedTicketResponse */
         PaginatedTicketResponse: {
@@ -513,23 +1209,6 @@ export interface components {
             /** Rules */
             rules: components["schemas"]["PriorityRuleEntry"][];
         };
-        /** PriorityMetrics */
-        PriorityMetrics: {
-            /** Open */
-            open: number;
-            /** In Progress */
-            in_progress: number;
-            /** Resolved */
-            resolved: number;
-            /** Closed */
-            closed: number;
-            /** Breached Open */
-            breached_open: number;
-            /** Breach Rate */
-            breach_rate: number;
-            /** Avg Resolution Seconds */
-            avg_resolution_seconds: number;
-        };
         /** PriorityRuleEntry */
         PriorityRuleEntry: {
             tier: components["schemas"]["CustomerTier"];
@@ -541,14 +1220,90 @@ export interface components {
          * @enum {string}
          */
         Role: "CUSTOMER" | "AGENT" | "DISPATCHER" | "ADMIN";
-        /**
-         * SlaDurationEntry
-         * @description Read-only in v1 — the durations are fixed in the domain (SLA_ENGINE.md §1).
-         */
+        /** SavedViewCreate */
+        SavedViewCreate: {
+            /** Name */
+            name: string;
+            filters: components["schemas"]["TicketFilters"];
+        };
+        /** SavedViewResponse */
+        SavedViewResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            filters: components["schemas"]["TicketFilters"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** SlaDurationEntry */
         SlaDurationEntry: {
             priority: components["schemas"]["Priority"];
             /** Seconds */
             seconds: number;
+        };
+        /**
+         * SlaPolicySummary
+         * @description The active policy — configurable from P17 (was read-only in v1).
+         */
+        SlaPolicySummary: {
+            /**
+             * Version Id
+             * Format: uuid
+             */
+            version_id: string;
+            /** Activated At */
+            activated_at: string | null;
+            /** Note */
+            note: string | null;
+            /** Durations */
+            durations: components["schemas"]["SlaDurationEntry"][];
+        };
+        /**
+         * SlaPolicyUpdate
+         * @description A full replacement of the durations.
+         *
+         *     Whole-policy rather than per-priority for the same reason as the matrix: the
+         *     mapping must stay **total** (SLA_ENGINE.md §2), and per-priority edits pass
+         *     through states that are not.
+         */
+        SlaPolicyUpdate: {
+            /** Durations */
+            durations: components["schemas"]["SlaDurationEntry"][];
+            /** Note */
+            note?: string | null;
+        };
+        /**
+         * SlaPolicyVersionSummary
+         * @description One entry of the history that makes a frozen deadline explainable.
+         */
+        SlaPolicyVersionSummary: {
+            /**
+             * Version Id
+             * Format: uuid
+             */
+            version_id: string;
+            /** Activated At */
+            activated_at: string | null;
+            /** Note */
+            note: string | null;
+            /** Durations */
+            durations: components["schemas"]["SlaDurationEntry"][];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Superseded At */
+            superseded_at: string | null;
+            /** Is Active */
+            is_active: boolean;
         };
         /** TicketCreate */
         TicketCreate: {
@@ -580,6 +1335,24 @@ export interface components {
              * Format: date-time
              */
             deadline: string;
+            /**
+             * Sla Due At
+             * Format: date-time
+             */
+            sla_due_at: string;
+            /** Sla Paused At */
+            sla_paused_at: string | null;
+            /** Sla Paused Seconds */
+            sla_paused_seconds: number;
+            /** Reopen Count */
+            reopen_count: number;
+            /**
+             * Sla Policy Version Id
+             * Format: uuid
+             */
+            sla_policy_version_id: string;
+            /** Resolved At */
+            resolved_at: string | null;
             /** Escalation Level */
             escalation_level: number;
             /** Sla Breached At */
@@ -594,6 +1367,10 @@ export interface components {
             assignee?: components["schemas"]["AssigneeSummary"] | null;
             /** Timeline */
             timeline?: components["schemas"]["TicketEventResponse"][];
+            /** Sla Policy Seconds */
+            sla_policy_seconds?: number | null;
+            /** Sla Policy Activated At */
+            sla_policy_activated_at?: string | null;
         };
         /**
          * TicketEventResponse
@@ -618,6 +1395,32 @@ export interface components {
              */
             created_at: string;
         };
+        /**
+         * TicketFilters
+         * @description Every filter the list endpoint accepts. All optional, all combinable.
+         */
+        TicketFilters: {
+            /** Q */
+            q?: string | null;
+            status?: components["schemas"]["TicketStatus"] | null;
+            priority?: components["schemas"]["Priority"] | null;
+            category?: components["schemas"]["Category"] | null;
+            /** Breached */
+            breached?: boolean | null;
+            /** Assigned */
+            assigned?: boolean | null;
+            /** Escalated */
+            escalated?: boolean | null;
+            tier?: components["schemas"]["CustomerTier"] | null;
+            /** Assignee Id */
+            assignee_id?: string | null;
+            /** Customer Id */
+            customer_id?: string | null;
+            /** Created After */
+            created_after?: string | null;
+            /** Created Before */
+            created_before?: string | null;
+        };
         /** TicketResponse */
         TicketResponse: {
             /**
@@ -635,6 +1438,24 @@ export interface components {
              * Format: date-time
              */
             deadline: string;
+            /**
+             * Sla Due At
+             * Format: date-time
+             */
+            sla_due_at: string;
+            /** Sla Paused At */
+            sla_paused_at: string | null;
+            /** Sla Paused Seconds */
+            sla_paused_seconds: number;
+            /** Reopen Count */
+            reopen_count: number;
+            /**
+             * Sla Policy Version Id
+             * Format: uuid
+             */
+            sla_policy_version_id: string;
+            /** Resolved At */
+            resolved_at: string | null;
             /** Escalation Level */
             escalation_level: number;
             /** Sla Breached At */
@@ -649,7 +1470,48 @@ export interface components {
          * TicketStatus
          * @enum {string}
          */
-        TicketStatus: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+        TicketStatus: "OPEN" | "IN_PROGRESS" | "PENDING_CUSTOMER" | "RESOLVED" | "CLOSED";
+        /** TimeseriesPoint */
+        TimeseriesPoint: {
+            /**
+             * Bucket Start
+             * Format: date-time
+             */
+            bucket_start: string;
+            /** Value */
+            value: number;
+        };
+        /**
+         * TimeseriesResponse
+         * @description Empty buckets are emitted as zero, never omitted.
+         *
+         *     A chart that silently drops a quiet day draws a straight line through the
+         *     gap and misreports it as steady activity (spec09 §3).
+         */
+        TimeseriesResponse: {
+            /**
+             * Bucket
+             * @enum {string}
+             */
+            bucket: "day" | "week" | "month";
+            /**
+             * Metric
+             * @enum {string}
+             */
+            metric: "created" | "resolved" | "breached" | "breach_rate";
+            /**
+             * Range From
+             * Format: date-time
+             */
+            range_from: string;
+            /**
+             * Range To
+             * Format: date-time
+             */
+            range_to: string;
+            /** Points */
+            points: components["schemas"]["TimeseriesPoint"][];
+        };
         /** TokenResponse */
         TokenResponse: {
             /** Access Token */
@@ -716,6 +1578,18 @@ export interface components {
              */
             email: string;
             role: components["schemas"]["Role"];
+            /**
+             * Open Ticket Count
+             * @default 0
+             */
+            open_ticket_count: number;
+            /** Max Open Tickets */
+            max_open_tickets?: number | null;
+            /**
+             * Accepts Auto Assignment
+             * @default true
+             */
+            accepts_auto_assignment: boolean;
             /** Is Active */
             is_active: boolean;
         };
@@ -725,10 +1599,16 @@ export interface components {
          *
          *     Deactivating never removes them: existing tickets keep naming their owner, and
          *     the audit trail must stay readable. It only stops new assignments (INV-8).
+         *
+         *     All fields optional so a PATCH can change one without restating the rest.
          */
         UserUpdate: {
             /** Is Active */
-            is_active: boolean;
+            is_active?: boolean | null;
+            /** Max Open Tickets */
+            max_open_tickets?: number | null;
+            /** Accepts Auto Assignment */
+            accepts_auto_assignment?: boolean | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -768,6 +1648,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    db_health_health_db_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DbHealthResponse"];
                 };
             };
         };
@@ -838,13 +1738,120 @@ export interface operations {
             };
         };
     };
+    bulk_assign_api_v1_tickets_bulk_assignment_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkAssignmentRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_transition_api_v1_tickets_bulk_transitions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkTransitionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_reassign_api_v1_tickets_bulk_reassignment_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkReassignmentRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_tickets_api_v1_tickets_get: {
         parameters: {
             query?: {
+                q?: string | null;
                 status?: components["schemas"]["TicketStatus"] | null;
                 priority?: components["schemas"]["Priority"] | null;
+                category?: components["schemas"]["Category"] | null;
                 breached?: boolean | null;
                 assigned?: boolean | null;
+                escalated?: boolean | null;
+                tier?: components["schemas"]["CustomerTier"] | null;
+                assignee_id?: string | null;
+                customer_id?: string | null;
+                created_after?: string | null;
+                created_before?: string | null;
                 limit?: number;
                 cursor?: string | null;
             };
@@ -877,7 +1884,9 @@ export interface operations {
     create_ticket_api_v1_tickets_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -925,6 +1934,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TicketDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    claim_ticket_api_v1_tickets__ticket_id__claim_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ticket_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketResponse"];
                 };
             };
             /** @description Validation Error */
@@ -1063,6 +2103,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CommentResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_attachments_api_v1_tickets__ticket_id__attachments_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ticket_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["AttachmentResponse"][];
+                    };
                 };
             };
             /** @description Validation Error */
@@ -1265,6 +2338,114 @@ export interface operations {
             };
         };
     };
+    get_timeseries_api_v1_metrics_timeseries_get: {
+        parameters: {
+            query?: {
+                metric?: "created" | "resolved" | "breached" | "breach_rate";
+                bucket?: "day" | "week" | "month";
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimeseriesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_agent_metrics_api_v1_metrics_agents_get: {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentMetricsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_tickets_csv_api_v1_metrics_export_tickets_csv_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                status?: components["schemas"]["TicketStatus"] | null;
+                priority?: components["schemas"]["Priority"] | null;
+                category?: components["schemas"]["Category"] | null;
+                breached?: boolean | null;
+                assigned?: boolean | null;
+                escalated?: boolean | null;
+                tier?: components["schemas"]["CustomerTier"] | null;
+                assignee_id?: string | null;
+                customer_id?: string | null;
+                created_after?: string | null;
+                created_before?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Streamed CSV. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     read_configuration_api_v1_configuration_get: {
         parameters: {
             query?: never;
@@ -1314,6 +2495,312 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    replace_sla_policy_api_v1_configuration_sla_policy_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SlaPolicyUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigurationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sla_policy_history_api_v1_configuration_sla_policy_history_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["SlaPolicyVersionSummary"][];
+                    };
+                };
+            };
+        };
+    };
+    set_assignment_api_v1_configuration_assignment_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignmentSettings"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigurationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_saved_views_api_v1_saved_views_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["SavedViewResponse"][];
+                    };
+                };
+            };
+        };
+    };
+    create_saved_view_api_v1_saved_views_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavedViewCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedViewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_saved_view_api_v1_saved_views__view_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                view_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_notifications_api_v1_notifications_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    notification_count_api_v1_notifications_count_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationCount"];
+                };
+            };
+        };
+    };
+    mark_read_api_v1_notifications_read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkReadRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationCount"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dismiss_notification_api_v1_notifications__event_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clear_notifications_api_v1_notifications_clear_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationCount"];
                 };
             };
         };

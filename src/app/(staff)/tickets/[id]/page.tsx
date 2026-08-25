@@ -2,6 +2,8 @@ import { MessageSquare, StickyNote } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { AttachmentList } from "@/components/attachments/attachment-list";
+import { AttachmentUpload } from "@/components/attachments/attachment-upload";
 import { CommentComposer } from "@/components/comments/comment-composer";
 import { Timeline } from "@/components/comments/timeline";
 import { AssignDialog } from "@/components/forms/assign-dialog";
@@ -10,10 +12,22 @@ import { ActionPanel } from "@/components/tickets/action-panel";
 import { PriorityBadge } from "@/components/tickets/priority-badge";
 import { StatusBadge } from "@/components/tickets/status-badge";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { listAttachments } from "@/lib/api/attachments";
 import { getTicket, listActiveAgents, listComments } from "@/lib/api/tickets";
 import { getSession } from "@/lib/auth/session";
-import { formatDateTime } from "@/lib/format";
-import { categoryLabel, commentTypeLabel, term } from "@/lib/labels";
+import { formatDate, formatDateTime } from "@/lib/format";
+import { categoryLabel, commentTypeLabel, priorityLabel, term } from "@/lib/labels";
+
+/** "2 hours" / "30 minutes" — the window a ticket was actually given. */
+function slaWindowLabel(seconds: number): string {
+  if (seconds < 3600) {
+    const minutes = Math.round(seconds / 60);
+    return `${minutes} minute${minutes === 1 ? "" : "s"}`;
+  }
+  const hours = seconds / 3600;
+  const rounded = Number.isInteger(hours) ? hours : Number(hours.toFixed(2));
+  return `${rounded} hour${rounded === 1 ? "" : "s"}`;
+}
 
 export const metadata = { title: "Ticket · Support Engine" };
 
@@ -30,10 +44,11 @@ export default async function StaffTicketPage({
   // visibility on every one of them — so a request the caller may not see returns
   // its own 404 rather than leaking through this parallelism.
   const canAssign = session.role === "DISPATCHER" || session.role === "ADMIN";
-  const [result, comments, agentsResult] = await Promise.all([
+  const [result, comments, agentsResult, attachments] = await Promise.all([
     getTicket(session.token, id),
     listComments(session.token, id),
     canAssign ? listActiveAgents(session.token) : Promise.resolve(null),
+    listAttachments(session.token, id),
   ]);
   if (!result.ok) {
     if (result.error.code === "UNAUTHENTICATED") redirect("/sign-out");
@@ -65,7 +80,8 @@ export default async function StaffTicketPage({
         <CardHeader>
           <CardTitle>{ticket.subject}</CardTitle>
           <SlaCountdown
-            deadline={ticket.deadline}
+            dueAt={ticket.sla_due_at}
+                        status={ticket.status}
             createdAt={ticket.created_at}
             audience="staff"
             settled={settled}
@@ -115,21 +131,40 @@ export default async function StaffTicketPage({
                             : "border-l-4 border-l-border px-3 py-2"
                         }
                       >
-                        <span className="flex items-center gap-2 text-xs text-text/60">
-                          {isInternal ? (
-                            <StickyNote aria-hidden className="size-3.5" strokeWidth={1.5} />
-                          ) : (
-                            <MessageSquare aria-hidden className="size-3.5" strokeWidth={1.5} />
-                          )}
-                          {commentTypeLabel(note.type)} · {formatDateTime(note.created_at)}
-                        </span>
-                        <p className="whitespace-pre-wrap text-sm text-text">{note.body}</p>
+                        <div className="flex items-center justify-between text-xs text-text/60">
+                          <span className="flex items-center gap-2">
+                            {isInternal ? (
+                              <StickyNote aria-hidden className="size-3.5" strokeWidth={1.5} />
+                            ) : (
+                              <MessageSquare aria-hidden className="size-3.5" strokeWidth={1.5} />
+                            )}
+                            {note.author.name}
+                            {note.author.type === "CUSTOMER" && " (Customer)"}
+                          </span>
+                          <span>
+                            {commentTypeLabel(note.type)} · {formatDateTime(note.created_at)}
+                          </span>
+                        </div>
+                        <p className="mt-1 whitespace-pre-wrap text-sm text-text">{note.body}</p>
                       </li>
                     );
                   })}
                 </ul>
               )}
-              {!settled && <CommentComposer ticketId={ticket.id} />}
+              {!settled && <CommentComposer ticketId={ticket.id} audience="staff" />}
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Files</CardTitle>
+            </CardHeader>
+            <CardBody className="flex flex-col gap-3">
+              <AttachmentList
+                ticketId={ticket.id}
+                attachments={attachments.ok ? attachments.data.items : []}
+              />
+              {ticket.status !== "CLOSED" && <AttachmentUpload ticketId={ticket.id} />}
             </CardBody>
           </Card>
 
@@ -175,7 +210,27 @@ export default async function StaffTicketPage({
                 <Row label={term("assignee", "staff")} value={ticket.assignee?.name ?? "Unassigned"} />
                 <Row label="Category" value={categoryLabel(ticket.category)} />
                 <Row label="Created" value={formatDateTime(ticket.created_at)} />
-                <Row label={term("deadline", "staff")} value={formatDateTime(ticket.deadline)} />
+                <Row
+                  label={term("deadline", "staff")}
+                  value={formatDateTime(ticket.sla_due_at)}
+                />
+                {/* Provenance. Without it a ticket created under an old policy
+                    looks like a bug against the current configuration
+                    (spec06 frontend §5). Staff only — a policy version is a
+                    sharper-edged version of the priority customers never see. */}
+                {ticket.sla_policy_seconds !== null &&
+                  ticket.sla_policy_seconds !== undefined && (
+                    <Row
+                      label="Target"
+                      value={`${slaWindowLabel(ticket.sla_policy_seconds)} · ${priorityLabel(
+                        ticket.priority,
+                      )}${
+                        ticket.sla_policy_activated_at
+                          ? ` · policy of ${formatDate(ticket.sla_policy_activated_at)}`
+                          : ""
+                      }`}
+                    />
+                  )}
               </dl>
             </CardBody>
           </Card>

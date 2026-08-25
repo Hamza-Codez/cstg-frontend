@@ -25,6 +25,9 @@ const config: Config = {
       header: "var(--color-header)",
       "header-alt": "var(--color-header-alt)",
       text: "var(--color-text)",
+      // Secondary text. A real colour, not `text-text/60` — the tokens here
+      // carry no `<alpha-value>`, so opacity modifiers compile to nothing.
+      "text-muted": "var(--color-text-muted)",
       "text-inverse": "var(--color-text-inverse)",
       border: "var(--color-border)",
       // Status signalling only — see tokens.css §2.2.
@@ -41,6 +44,17 @@ const config: Config = {
       "chart-seq-3": "var(--chart-seq-3)",
       "chart-seq-4": "var(--chart-seq-4)",
       "chart-grid": "var(--chart-grid)",
+      // Solid control fills (dark neutral / dark danger) + the ink on the
+      // muted gradient. Never status, never the accent.
+      control: "var(--color-control)",
+      "control-hover": "var(--color-control-hover)",
+      "control-border": "var(--color-control-border)",
+      "control-border-hover": "var(--color-control-border-hover)",
+      "control-ink": "var(--color-control-ink)",
+      "danger-solid": "var(--color-danger-solid)",
+      "danger-solid-hover": "var(--color-danger-solid-hover)",
+      "danger-solid-border": "var(--color-danger-solid-border)",
+      "danger-solid-border-hover": "var(--color-danger-solid-border-hover)",
     },
     borderRadius: {
       none: "0",
@@ -63,6 +77,8 @@ const config: Config = {
         "gradient-sidebar": "var(--gradient-sidebar)",
         "gradient-accent": "var(--gradient-accent)",
         "gradient-structure": "var(--gradient-structure)",
+        "gradient-muted": "var(--gradient-muted)",
+        "gradient-muted-hover": "var(--gradient-muted-hover)",
       },
       spacing: {
         1: "var(--space-1)",

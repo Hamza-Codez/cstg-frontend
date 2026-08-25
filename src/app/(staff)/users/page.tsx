@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { ActiveToggle, StaffForm } from "@/components/forms/staff-form";
+import { ActiveToggle, AgentRouting, StaffForm } from "@/components/forms/staff-form";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableHead, Td, Th, Tr } from "@/components/ui/table";
 import { listStaff } from "@/lib/api/admin";
@@ -49,6 +49,7 @@ export default async function UsersPage() {
           <Th>Email</Th>
           <Th>Role</Th>
           <Th>Status</Th>
+          <Th>Routing</Th>
           <Th>Action</Th>
         </TableHead>
         <TableBody>
@@ -59,6 +60,19 @@ export default async function UsersPage() {
               <Td>{roleLabel(member.role)}</Td>
               <Td className={member.is_active ? "text-on-track" : "text-text/50"}>
                 {member.is_active ? "Active" : "Deactivated"}
+              </Td>
+              <Td>
+                {/* Routing applies to agents; dispatchers and admins are never
+                    assignment targets. */}
+                {member.role === "AGENT" ? (
+                  <AgentRouting
+                    userId={member.id}
+                    maxOpenTickets={member.max_open_tickets ?? null}
+                    acceptsAutoAssignment={member.accepts_auto_assignment ?? true}
+                  />
+                ) : (
+                  <span className="text-xs text-text/50">—</span>
+                )}
               </Td>
               <Td>
                 <ActiveToggle

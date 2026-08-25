@@ -3,9 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { addComment, assignTicket, transitionTicket } from "@/lib/api/tickets";
+import { addComment, assignTicket, claimTicket, transitionTicket } from "@/lib/api/tickets";
 import { getSession } from "@/lib/auth/session";
 import type { CommentType, TicketStatus } from "@/lib/types";
+
+export interface ClaimState {
+  error?: string;
+  /** Lost the race — information, not an error. */
+  taken?: string;
+  ok?: boolean;
+}
 
 export interface ActionState {
   error?: string;
@@ -30,10 +37,13 @@ function messageFor(code: string, fallback: string): string {
   }
 }
 
+import { assertSameOrigin } from "@/lib/auth/csrf";
+
 export async function transitionAction(
   _previous: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await assertSameOrigin();
   const session = await getSession();
   if (!session) redirect("/sign-in");
 
@@ -54,14 +64,16 @@ export async function assignAction(
   _previous: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await assertSameOrigin();
   const session = await getSession();
   if (!session) redirect("/sign-in");
 
   const ticketId = String(formData.get("ticket_id") ?? "");
   const assigneeId = String(formData.get("assignee_id") ?? "");
+  const overrideCapacity = formData.get("override_capacity") === "true";
   if (!assigneeId) return { error: "Choose an agent to assign this to." };
 
-  const result = await assignTicket(session.token, ticketId, assigneeId);
+  const result = await assignTicket(session.token, ticketId, assigneeId, overrideCapacity);
   if (!result.ok) {
     return {
       error: messageFor(result.error.code, "That agent can't take this ticket."),
@@ -77,6 +89,7 @@ export async function commentAction(
   _previous: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await assertSameOrigin();
   const session = await getSession();
   if (!session) redirect("/sign-in");
 
@@ -90,6 +103,42 @@ export async function commentAction(
     return { error: messageFor(result.error.code, result.error.message) };
   }
 
+  revalidatePath(`/tickets/${ticketId}`);
+  revalidatePath(`/requests/${ticketId}`);
+  return { ok: true };
+}
+
+/**
+ * An agent takes an unassigned ticket (spec07 frontend §2).
+ *
+ * A 409 here is the NORMAL outcome of two agents scanning the same queue, so it
+ * comes back as `taken` rather than `error` — the caller shows it as
+ * information, not failure.
+ */
+export async function claimAction(
+  _previous: ClaimState,
+  formData: FormData,
+): Promise<ClaimState> {
+  await assertSameOrigin();
+  const session = await getSession();
+  if (!session) redirect("/sign-in");
+
+  const ticketId = String(formData.get("ticket_id") ?? "");
+  const result = await claimTicket(session.token, ticketId);
+
+  if (!result.ok) {
+    if (result.error.code === "UNAUTHENTICATED") redirect("/sign-in");
+    if (result.error.code === "STATE_CONFLICT") {
+      return { taken: "Someone else just took this one." };
+    }
+    if (result.error.code === "BUSINESS_RULE_VIOLATION") {
+      // Names the actual limit, so the agent knows what to do about it.
+      return { error: result.error.message };
+    }
+    return { error: messageFor(result.error.code, result.error.message) };
+  }
+
+  revalidatePath("/queue");
   revalidatePath(`/tickets/${ticketId}`);
   return { ok: true };
 }

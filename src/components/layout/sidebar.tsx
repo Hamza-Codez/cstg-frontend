@@ -6,16 +6,7 @@
  * the one place accent appears in navigation.
  */
 
-import {
-  Archive,
-  Inbox,
-  LayoutDashboard,
-  Plus,
-  Settings,
-  Ticket,
-  TriangleAlert,
-  Users,
-} from "lucide-react";
+import { Archive, Bell, Inbox, LayoutDashboard, Plus, Settings, Ticket, TriangleAlert, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -33,6 +24,7 @@ const ICONS: Record<IconName, LucideIcon> = {
   users: Users,
   settings: Settings,
   archive: Archive,
+  bell: Bell,
 };
 
 export function Sidebar({ items }: { items: NavItem[] }) {

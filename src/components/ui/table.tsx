@@ -29,8 +29,15 @@ export function TableHead({ children }: { children: ReactNode }) {
   );
 }
 
-export function Th({ children }: { children: ReactNode }) {
-  return <th scope="col" className="px-4 py-2 text-xs font-medium">{children}</th>;
+export function Th({ children, className }: { children: ReactNode; className?: string }) {
+  // `className` is for column sizing only — a checkbox column needs a width so
+  // it does not stretch to share the table evenly with Subject. Padding and
+  // type stay fixed here so header cells cannot drift apart per table.
+  return (
+    <th scope="col" className={cn("px-4 py-[7px] text-[13px] font-medium", className)}>
+      {children}
+    </th>
+  );
 }
 
 export function TableBody({ children }: { children: ReactNode }) {
@@ -52,5 +59,5 @@ export function Tr({ children, onClick }: { children: ReactNode; onClick?: () =>
 }
 
 export function Td({ children, className }: { children: ReactNode; className?: string }) {
-  return <td className={cn("px-4 py-1.5 text-text", className)}>{children}</td>;
+  return <td className={cn("px-4 py-[7px] text-text", className)}>{children}</td>;
 }

@@ -14,14 +14,13 @@ describe("Button", () => {
     expect(["sm", "md", "lg", "xl", "full"].some((step) => button.className.includes(`rounded-${step}`))).toBe(true);
   });
 
-  it("uses the accent fill only for the primary CTA, with dark ink on it", () => {
+  it("uses the gradient primary fill only for the primary CTA, with light text on it", () => {
     const { rerender } = render(<Button variant="primary">Assign</Button>);
-    // White on the gold accent is 2.36:1 — unreadable. The dark ink is 4.99:1.
-    expect(screen.getByRole("button").className).toContain("bg-accent");
-    expect(screen.getByRole("button").className).toContain("text-on-accent");
+    expect(screen.getByRole("button").className).toContain("bg-gradient-primary");
+    expect(screen.getByRole("button").className).toContain("text-white");
 
     rerender(<Button variant="secondary">Cancel</Button>);
-    expect(screen.getByRole("button").className).not.toContain("bg-accent");
+    expect(screen.getByRole("button").className).not.toContain("bg-gradient-primary");
   });
 
   it("defaults to type=button so it cannot submit a form by accident", () => {

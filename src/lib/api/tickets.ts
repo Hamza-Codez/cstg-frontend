@@ -1,23 +1,20 @@
 /** Typed ticket calls (docs/API.md §4, §7). */
 
 import { apiFetch, type ApiResult } from "./client";
+import type { TicketFilterValues } from "@/lib/filters";
 import type {
   Category,
   CommentResponse,
   CommentType,
   PaginatedTicketResponse,
-  Priority,
   TicketDetailResponse,
   TicketResponse,
   TicketStatus,
   UserSummary,
 } from "@/lib/types";
 
-export interface TicketFilters {
-  status?: TicketStatus;
-  priority?: Priority;
-  breached?: boolean;
-  assigned?: boolean;
+/** Wire-level list params: the URL filters plus pagination. */
+export interface TicketFilters extends TicketFilterValues {
   limit?: number;
   cursor?: string;
 }
@@ -50,11 +47,12 @@ export function assignTicket(
   token: string,
   ticketId: string,
   assigneeId: string,
+  overrideCapacity = false,
 ): Promise<ApiResult<TicketResponse>> {
   return apiFetch<TicketResponse>(`/api/v1/tickets/${ticketId}/assignment`, {
     method: "POST",
     token,
-    body: { assignee_id: assigneeId },
+    body: { assignee_id: assigneeId, override_capacity: overrideCapacity },
   });
 }
 
@@ -96,4 +94,12 @@ export function listComments(
   ticketId: string,
 ): Promise<ApiResult<{ items: CommentResponse[] }>> {
   return apiFetch<{ items: CommentResponse[] }>(`/api/v1/tickets/${ticketId}/comments`, { token });
+}
+
+/** An agent takes an unassigned ticket (docs/API.md §6). */
+export function claimTicket(token: string, ticketId: string): Promise<ApiResult<TicketResponse>> {
+  return apiFetch<TicketResponse>(`/api/v1/tickets/${ticketId}/claim`, {
+    method: "POST",
+    token,
+  });
 }

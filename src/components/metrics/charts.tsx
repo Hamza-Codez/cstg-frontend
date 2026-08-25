@@ -17,9 +17,12 @@
 import {
   Bar,
   BarChart,
+  CartesianGrid,
   Cell,
   LabelList,
   Legend,
+  Line,
+  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -163,6 +166,87 @@ export function BreachDonut({ breached, healthy }: { breached: number; healthy: 
       <p className="sr-only">
         {breached} of {total} open tickets are overdue.
       </p>
+    </div>
+  );
+}
+
+export interface TrendPoint {
+  /** Formatted for the axis by the server, so the chart does no date work. */
+  label: string;
+  value: number;
+}
+
+/**
+ * The Trends line (spec09 frontend §4).
+ *
+ * **Zero buckets are points, not gaps.** The backend emits every bucket in
+ * range explicitly, and `connectNulls` stays off — a line interpolated across a
+ * silent day reports steady activity on a day with none.
+ *
+ * One series at a time, so identity never depends on telling two lines apart:
+ * the metric is named in the segmented control above and in the axis label,
+ * and `--chart-1` is used unconditionally rather than cycling by metric.
+ */
+export function TrendChart({
+  points,
+  isRate,
+  seriesLabel,
+}: {
+  points: TrendPoint[];
+  isRate: boolean;
+  seriesLabel: string;
+}) {
+  return (
+    <div className="h-72 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={points} margin={{ top: 16, right: 16, bottom: 0, left: -12 }}>
+          <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
+          <XAxis
+            dataKey="label"
+            tick={AXIS_TICK}
+            axisLine={false}
+            tickLine={false}
+            minTickGap={24}
+          />
+          <YAxis
+            tick={AXIS_TICK}
+            axisLine={false}
+            tickLine={false}
+            allowDecimals={isRate}
+            // A rate is pinned to a full 0–100% axis: an autoscaled one makes a
+            // 2%-to-3% wobble look like a doubling, which it is, but not the
+            // kind anyone should read off a shape.
+            domain={isRate ? [0, 100] : [0, "auto"]}
+            tickFormatter={(value: number) => (isRate ? `${value}%` : String(value))}
+            width={48}
+          />
+          <Tooltip
+            contentStyle={TOOLTIP_STYLE}
+            cursor={{ stroke: "var(--chart-grid)" }}
+            formatter={(value) => [
+              isRate ? `${Number(value).toFixed(1)}%` : String(value),
+              seriesLabel,
+            ]}
+          />
+          <Line
+            // Straight segments, not a spline. `monotone` draws a smooth ramp
+            // between two measured days, which invents a shape for hours nobody
+            // counted — the same misreporting as interpolating across a gap,
+            // just prettier. Especially visible on a zero-heavy series, where a
+            // curve turns a single busy day into a three-day swell.
+            type="linear"
+            dataKey="value"
+            name={seriesLabel}
+            stroke="var(--chart-1)"
+            strokeWidth={2}
+            // Dots only on short series; at 90 points they become a smear.
+            dot={points.length <= 31 ? { r: 2, fill: "var(--chart-1)" } : false}
+            activeDot={{ r: 4 }}
+            connectNulls={false}
+            isAnimationActive={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 }

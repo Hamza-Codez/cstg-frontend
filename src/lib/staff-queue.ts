@@ -21,6 +21,9 @@ export async function loadQueue(
   if (!result.ok) {
     return {
       tickets: [],
+      // A 403 here means a filter this role may not use reached the API
+      // (spec04 §4). The bar hides those controls, so seeing this is a UI bug
+      // rather than something to explain away — it gets the plain §8 copy.
       error:
         result.error.code === "FORBIDDEN"
           ? "You don't have access to this."

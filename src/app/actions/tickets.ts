@@ -10,16 +10,25 @@ import type { Category } from "@/lib/types";
 export interface NewRequestState {
   error?: string;
   fieldErrors?: { subject?: string; body?: string };
+  /**
+   * Set once the ticket exists. The action deliberately does **not** redirect:
+   * queued attachments can only be uploaded after the ticket has an id
+   * (spec03 §4), so the client uploads and then navigates.
+   */
+  ticketId?: string;
 }
 
 /** Mirrors the backend's TicketCreate bounds for fast feedback; server is authority. */
 const SUBJECT_MAX = 200;
 const BODY_MAX = 10000;
 
+import { assertSameOrigin } from "@/lib/auth/csrf";
+
 export async function createRequestAction(
   _previous: NewRequestState,
   formData: FormData,
 ): Promise<NewRequestState> {
+  await assertSameOrigin();
   const session = await getSession();
   if (!session) redirect("/sign-in");
 
@@ -41,6 +50,7 @@ export async function createRequestAction(
   }
 
   revalidatePath("/requests");
-  // Straight to the new request so the flow confirms inline, never a dead end (§7.1.4).
-  redirect(`/requests/${result.data.id}`);
+  // The client navigates once uploads finish — still straight to the new
+  // request, never a dead end (§7.1.4).
+  return { ticketId: result.data.id };
 }

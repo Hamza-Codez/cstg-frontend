@@ -37,6 +37,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             alt="3D ambient background"
             fill
             unoptimized
+            priority
             className="object-cover opacity-60 mix-blend-overlay"
           />
         </div>

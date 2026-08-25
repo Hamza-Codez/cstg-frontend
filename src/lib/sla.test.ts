@@ -43,3 +43,20 @@ describe("formatDuration", () => {
     expect(formatDuration(-(1 * HOUR + 20 * 60_000))).toBe("1h 20m");
   });
 });
+
+describe("paused (P16)", () => {
+  it("returns paused for PENDING_CUSTOMER however far past due", () => {
+    // sla_due_at holds its pre-pause value and is stale by design. Without the
+    // paused branch that staleness would render as lateness.
+    expect(slaState(iso(-365 * 24 * HOUR), now, undefined, "PENDING_CUSTOMER")).toBe("paused");
+  });
+
+  it("is checked ahead of overdue and at-risk", () => {
+    expect(slaState(iso(60_000), now, undefined, "PENDING_CUSTOMER")).toBe("paused");
+  });
+
+  it("leaves every other status behaving exactly as before", () => {
+    expect(slaState(iso(-1000), now, undefined, "IN_PROGRESS")).toBe("overdue");
+    expect(slaState(iso(-1000), now)).toBe("overdue");
+  });
+});

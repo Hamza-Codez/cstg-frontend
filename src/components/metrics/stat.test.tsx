@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
@@ -17,6 +20,23 @@ describe("Stat", () => {
     expect(screen.getByText("Breach rate")).toBeInTheDocument();
     expect(screen.getByText("12.5%")).toBeInTheDocument();
     expect(screen.getByText("of all tickets")).toBeInTheDocument();
+  });
+
+  it("never wears the accent, which is CTA-only", () => {
+    // `StatAccent` no longer offers it, so this cannot be written by mistake —
+    // the test is here to fail loudly if someone widens the union back.
+    const source = readFileSync(resolve("src/components/metrics/stat.tsx"), "utf8");
+    expect(source).not.toContain("gradient-accent");
+    expect(source).not.toContain("bg-accent");
+  });
+
+  it("keeps every tile the same height so a row of numbers sits on one line", () => {
+    // A label that wraps used to make its header band taller and push that
+    // tile's number below its neighbours', which reads as a rendering fault.
+    const { container } = render(
+      <Stat label="A label long enough to wrap on a narrow tile" value="3" />,
+    );
+    expect(container.firstElementChild?.className).toContain("h-full");
   });
 });
 

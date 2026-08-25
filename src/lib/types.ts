@@ -25,14 +25,42 @@ export type CustomerTier = Schemas["CustomerTier"];
 export type TicketDetailResponse = Schemas["TicketDetailResponse"];
 export type PaginatedTicketResponse = Schemas["PaginatedTicketResponse"];
 export type CommentResponse = Schemas["CommentResponse"];
+export type AttachmentResponse = Schemas["AttachmentResponse"];
 export type TicketEventResponse = Schemas["TicketEventResponse"];
 export type AssigneeSummary = Schemas["AssigneeSummary"];
 export type UserSummary = Schemas["UserSummary"];
 export type MetricsOverview = Schemas["MetricsOverview"];
-export type PriorityMetrics = Schemas["PriorityMetrics"];
+/**
+ * One slice of the ticket population — by priority, plan or category.
+ *
+ * Renamed from `PriorityMetrics` at P20 when the same shape gained two more
+ * dimensions. `PriorityMetrics` stays as an alias for the existing by-priority
+ * call sites; it names the *use*, not the shape.
+ */
+export type GroupMetrics = Schemas["GroupMetrics"];
+export type PriorityMetrics = GroupMetrics;
+export type TimeseriesResponse = Schemas["TimeseriesResponse"];
+export type TimeseriesPoint = Schemas["TimeseriesPoint"];
+export type AgentMetrics = Schemas["AgentMetrics"];
+export type AgentMetricsResponse = Schemas["AgentMetricsResponse"];
+/** Bucket sizes and series the timeseries endpoint accepts. */
+export type MetricBucket = "day" | "week" | "month";
+export type MetricSeries = "created" | "resolved" | "breached" | "breach_rate";
 export type ConfigurationResponse = Schemas["ConfigurationResponse"];
 export type PriorityRuleEntry = Schemas["PriorityRuleEntry"];
+export type SlaDurationEntry = Schemas["SlaDurationEntry"];
+export type AssignmentSettings = Schemas["AssignmentSettings"];
+export type NotificationItem = Schemas["NotificationItem"];
+export type NotificationPage = Schemas["NotificationPage"];
+export type SlaPolicySummary = Schemas["SlaPolicySummary"];
+export type SlaPolicyVersionSummary = Schemas["SlaPolicyVersionSummary"];
 export type EventType = Schemas["EventType"];
+
+export type BulkResultItem = Schemas["BulkItemResult"];
+export type BulkResult = Schemas["BulkResult"];
+export type BulkAssignmentRequest = Schemas["BulkAssignmentRequest"];
+export type BulkTransitionRequest = Schemas["BulkTransitionRequest"];
+export type BulkReassignmentRequest = Schemas["BulkReassignmentRequest"];
 
 /** Which vocabulary to render in (docs/UIUX_FRONTEND.md §4). */
 export type Audience = "customer" | "staff";

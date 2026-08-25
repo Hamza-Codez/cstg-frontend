@@ -18,12 +18,9 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { isStaleAction } from "@/lib/stale-action";
 
 const RELOAD_GUARD = "cstg_stale_action_reload";
-
-function isStaleAction(error: Error): boolean {
-  return /server action/i.test(error.message) && /not\s*(be\s*)?found/i.test(error.message);
-}
 
 export default function AppError({
   error,

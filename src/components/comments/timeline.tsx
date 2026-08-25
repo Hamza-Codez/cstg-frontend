@@ -5,7 +5,14 @@
  * scoped this list to what the principal may see, so nothing is filtered here.
  */
 
-import { CircleDashed, CircleDot, History, TriangleAlert, UserPlus } from "lucide-react";
+import {
+  CircleDashed,
+  CircleDot,
+  History,
+  Paperclip,
+  TriangleAlert,
+  UserPlus,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { formatDateTime } from "@/lib/format";
@@ -18,6 +25,8 @@ const ICONS: Record<EventType, LucideIcon> = {
   ASSIGNMENT: UserPlus,
   COMMENT: History,
   SLA_BREACH: TriangleAlert,
+  // P14 — docs/UIUX_FRONTEND.md §2.7 maps attachments to Paperclip.
+  ATTACHMENT: Paperclip,
 };
 
 function sentence(event: TicketEventResponse, audience: Audience): string {
@@ -33,13 +42,30 @@ function sentence(event: TicketEventResponse, audience: Audience): string {
         : `Status changed to ${to}`;
     }
     case "ASSIGNMENT":
-      return "Assigned to an agent";
+      // Automated assignment is the second SYSTEM actor after the SLA monitor.
+      // Without its own sentence it would render with an empty actor name
+      // (spec07 frontend §6). Customers never see ASSIGNMENT events at all —
+      // who works a ticket is internal routing.
+      return event.actor_type === "SYSTEM"
+        ? "Assigned automatically"
+        : "Assigned to an agent";
     case "COMMENT":
       return "A note was added";
     case "SLA_BREACH":
       return audience === "customer"
         ? "This is taking longer than expected — we have prioritised it"
         : "SLA marked overdue by system";
+    case "ATTACHMENT":
+      // Staff-only wording. The backend keeps ATTACHMENT out of
+      // _CUSTOMER_VISIBLE_EVENTS, so a customer never receives one — surfacing
+      // staff uploads in their timeline would leak internal activity, the same
+      // reasoning that keeps COMMENT out (spec03 frontend §6).
+      //
+      // spec03 frontend §6 wants "{actor} attached {filename}", but
+      // TicketEventResponse does not expose `detail`, so the filename is not
+      // reachable here. The attachment list carries the filenames; this stays
+      // generic until the contract exposes detail.
+      return "A file was attached";
   }
 }
 

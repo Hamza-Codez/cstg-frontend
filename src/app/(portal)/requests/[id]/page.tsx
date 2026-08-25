@@ -2,10 +2,15 @@ import { MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { AttachmentList } from "@/components/attachments/attachment-list";
+import { AttachmentUpload } from "@/components/attachments/attachment-upload";
+import { CommentComposer } from "@/components/comments/comment-composer";
+import { CustomerActions } from "@/components/tickets/customer-actions";
 import { Timeline } from "@/components/comments/timeline";
 import { SlaCountdown } from "@/components/sla/sla-countdown";
 import { StatusBadge } from "@/components/tickets/status-badge";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { listAttachments } from "@/lib/api/attachments";
 import { getTicket, listComments } from "@/lib/api/tickets";
 import { getSession } from "@/lib/auth/session";
 import { categoryLabel, term } from "@/lib/labels";
@@ -15,17 +20,24 @@ export const metadata = { title: "Request · Support Engine" };
 
 export default async function RequestDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ attachmentsFailed?: string }>;
 }) {
   const { id } = await params;
+  // Set by the new-request flow when the ticket was created but a file was not
+  // attached (spec03 §4). The ticket still exists — say so plainly and point at
+  // the fix rather than failing the whole flow.
+  const failedUploads = Number((await searchParams).attachmentsFailed ?? 0);
   const session = await getSession();
   if (!session) redirect("/sign-in");
 
   // Both requests go out together; the backend scopes each one independently.
-  const [result, comments] = await Promise.all([
+  const [result, comments, attachments] = await Promise.all([
     getTicket(session.token, id),
     listComments(session.token, id),
+    listAttachments(session.token, id),
   ]);
   if (!result.ok) {
     if (result.error.code === "UNAUTHENTICATED") redirect("/sign-out");
@@ -65,7 +77,8 @@ export default async function RequestDetailPage({
               breached={ticket.sla_breached_at !== null && !settled}
             />
             <SlaCountdown
-              deadline={ticket.deadline}
+              dueAt={ticket.sla_due_at}
+                        status={ticket.status}
               createdAt={ticket.created_at}
               audience="customer"
               settled={settled}
@@ -87,24 +100,53 @@ export default async function RequestDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Messages from support</CardTitle>
+          <CardTitle>Conversation</CardTitle>
         </CardHeader>
-        <CardBody>
+        <CardBody className="flex flex-col gap-4">
           {replies.length === 0 ? (
             <p className="text-sm text-text/60">No replies yet. We&apos;ll be in touch here.</p>
           ) : (
             <ul className="flex flex-col gap-4">
               {replies.map((reply) => (
                 <li key={reply.id} className="flex flex-col gap-1">
-                  <span className="flex items-center gap-2 text-xs text-text/60">
-                    <MessageSquare aria-hidden className="size-3.5" strokeWidth={1.5} />
-                    {formatDateTime(reply.created_at)}
-                  </span>
-                  <p className="whitespace-pre-wrap text-sm text-text">{reply.body}</p>
+                  <div className="flex items-center justify-between text-xs text-text/60">
+                    <span className="flex items-center gap-2">
+                      <MessageSquare aria-hidden className="size-3.5" strokeWidth={1.5} />
+                      {reply.author.name}
+                      {reply.author.type === "USER" && " (Support)"}
+                    </span>
+                    <span>{formatDateTime(reply.created_at)}</span>
+                  </div>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-text">{reply.body}</p>
                 </li>
               ))}
             </ul>
           )}
+          <CustomerActions ticketId={ticket.id} status={ticket.status} />
+          {ticket.status !== "CLOSED" && (
+            <CommentComposer ticketId={ticket.id} audience="customer" />
+          )}
+        </CardBody>
+      </Card>
+
+      {failedUploads > 0 && (
+        <p role="alert" className="rounded-sm border border-at-risk bg-surface px-3 py-2 text-sm text-text">
+          Request sent. {failedUploads === 1 ? "1 file" : `${failedUploads} files`} couldn&apos;t be
+          attached — you can add {failedUploads === 1 ? "it" : "them"} below.
+        </p>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Files</CardTitle>
+        </CardHeader>
+        <CardBody className="flex flex-col gap-3">
+          <AttachmentList
+            ticketId={ticket.id}
+            attachments={attachments.ok ? attachments.data.items : []}
+          />
+          {/* Closed requests take nothing new, matching the reply composer. */}
+          {ticket.status !== "CLOSED" && <AttachmentUpload ticketId={ticket.id} />}
         </CardBody>
       </Card>
 

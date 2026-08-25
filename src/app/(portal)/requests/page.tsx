@@ -1,22 +1,31 @@
-import { Plus, Ticket } from "lucide-react";
+import { Plus, Search, Ticket } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { SlaCountdown } from "@/components/sla/sla-countdown";
 import { StatusBadge } from "@/components/tickets/status-badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { listTickets } from "@/lib/api/tickets";
+import { parseFilters } from "@/lib/filters";
 import { getSession } from "@/lib/auth/session";
 import { ACTIONS } from "@/lib/labels";
 
 export const metadata = { title: "My requests · Support Engine" };
 
-export default async function RequestsPage() {
+export default async function RequestsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await getSession();
   if (!session) redirect("/sign-in");
 
-  const result = await listTickets(session.token, { limit: 50 });
+  // Customers get search over their own requests. The backend scopes it to
+  // them, so nothing here needs to say so (INV-9).
+  const filters = parseFilters(await searchParams);
+  const result = await listTickets(session.token, { limit: 50, ...filters });
   if (!result.ok) {
     if (result.error.code === "UNAUTHENTICATED") redirect("/sign-out");
     return (
@@ -32,8 +41,24 @@ export default async function RequestsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-xl font-medium">My requests</h1>
+        <form action="/requests" method="get" role="search" className="order-last w-full sm:order-none sm:w-auto">
+          <label htmlFor="requests-search" className="sr-only">
+            Search your requests
+          </label>
+          <div className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5">
+            <Search aria-hidden strokeWidth={1.5} className="size-4 text-structure" />
+            <input
+              id="requests-search"
+              type="search"
+              name="q"
+              defaultValue={filters.q ?? ""}
+              placeholder="Search your requests"
+              className="w-full bg-transparent text-sm text-text placeholder:text-text/50 focus-visible:outline-none sm:w-52"
+            />
+          </div>
+        </form>
         <Link
           href="/requests/new"
           className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-accent px-4 py-2 text-[15px] font-medium text-on-accent transition-colors duration-fast hover:bg-accent-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
@@ -48,7 +73,11 @@ export default async function RequestsPage() {
           <CardBody>
             <EmptyState
               icon={Ticket}
-              message="No requests yet. Start one and we'll pick it up."
+              message={
+                filters.q
+                  ? `No requests match “${filters.q}”.`
+                  : "No requests yet. Start one and we'll pick it up."
+              }
               action={
                 <Link
                   href="/requests/new"
@@ -78,13 +107,16 @@ export default async function RequestsPage() {
                         breached={ticket.sla_breached_at !== null && !settled}
                       />
                       <SlaCountdown
-                        deadline={ticket.deadline}
+                        dueAt={ticket.sla_due_at}
+                        status={ticket.status}
                         createdAt={ticket.created_at}
                         audience="customer"
                         settled={settled}
                       />
-                      <div className="ml-auto flex items-center text-[15px] font-medium text-accent group-hover:underline">
-                        View Request &rarr;
+                      <div className="ml-auto flex items-center">
+                        <div className={buttonVariants({ variant: "secondary", className: "pointer-events-none" })}>
+                          View Request
+                        </div>
                       </div>
                     </CardBody>
                   </Card>

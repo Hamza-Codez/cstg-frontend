@@ -18,10 +18,13 @@ export interface SignInState {
   error?: string;
 }
 
+import { assertSameOrigin } from "@/lib/auth/csrf";
+
 export async function signInAction(
   _previous: SignInState,
   formData: FormData,
 ): Promise<SignInState> {
+  await assertSameOrigin();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 

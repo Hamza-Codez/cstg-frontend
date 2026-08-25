@@ -12,7 +12,7 @@ import { useActionState, useEffect, useState } from "react";
 
 import { assignAction, type ActionState } from "@/app/actions/staff";
 import { Button } from "@/components/ui/button";
-import { Field } from "@/components/ui/input";
+import { Combobox } from "@/components/ui/combobox";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { ACTIONS } from "@/lib/labels";
@@ -39,7 +39,47 @@ export function AssignDialog({
     }
   }, [state, show]);
 
+  const [chosen, setChosen] = useState<string | null>(currentAssigneeId ?? null);
   const label = currentAssigneeId ? ACTIONS.reassign : ACTIONS.assign;
+
+  /** Absent or null both mean "no ceiling" — the fields carry defaults, so the
+   *  generated type makes them optional as well as nullable. */
+  function ceiling(agent: UserSummary): number | null {
+    return agent.max_open_tickets ?? null;
+  }
+
+  function openCount(agent: UserSummary): number {
+    return agent.open_ticket_count ?? 0;
+  }
+
+  function atCapacity(agent: UserSummary): boolean {
+    const cap = ceiling(agent);
+    return cap !== null && openCount(agent) >= cap;
+  }
+
+  const selected = agents.find((a) => a.id === chosen) ?? null;
+  const needsOverride = selected !== null && atCapacity(selected);
+
+  /**
+   * Load as TEXT and a bar. Colour is never the sole signal (§9), so the number
+   * carries the meaning and the bar reinforces it.
+   *
+   * The bar uses `structure` — load is not SLA health, so it must not borrow
+   * on-track/at-risk/overdue.
+   */
+  const options = agents.map((agent) => ({
+    value: agent.id,
+    label: agent.name,
+    hint:
+      ceiling(agent) === null
+        ? `${openCount(agent)} open`
+        : `${openCount(agent)} / ${ceiling(agent)} open`,
+    // Selectable, but marked: removing a full agent would hide the person a
+    // dispatcher may need during an incident, and the backend supports an
+    // explicit override.
+    flagged: atCapacity(agent),
+    flagLabel: "At limit",
+  }));
 
   return (
     <>
@@ -54,23 +94,61 @@ export function AssignDialog({
         ) : (
           <form action={formAction} className="flex flex-col gap-4">
             <input type="hidden" name="ticket_id" value={ticketId} />
-            <Field label="Agent" htmlFor="assignee_id" required>
-              <select
-                id="assignee_id"
-                name="assignee_id"
-                defaultValue={currentAssigneeId ?? ""}
-                className="cursor-pointer rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
-              >
-                <option value="">Choose an agent…</option>
-                {agents.map((agent) => (
-                  <option key={agent.id} value={agent.id}>
-                    {agent.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
+            <input type="hidden" name="assignee_id" value={chosen ?? ""} />
+            <Combobox
+              label="Agent"
+              options={options}
+              value={chosen}
+              onChange={setChosen}
+              placeholder="Search agents…"
+              emptyMessage="No agents match."
+            />
+
+            {selected && (
+              <p className="text-xs text-text/60">
+                {openCount(selected)} open
+                {ceiling(selected) !== null && ` of ${ceiling(selected)}`}
+                {/* Reinforcement, not the signal itself. */}
+                <span
+                  aria-hidden
+                  className="ml-2 inline-block h-1 w-24 rounded-full bg-canvas align-middle"
+                >
+                  <span
+                    className="block h-1 rounded-full bg-structure"
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        ceiling(selected)
+                          ? (openCount(selected) / (ceiling(selected) as number)) * 100
+                          : 0,
+                      )}%`,
+                    }}
+                  />
+                </span>
+              </p>
+            )}
+
+            {/* The override is deliberate and per-assignment: capacity is a
+                routing heuristic, and a dispatcher handling a CRITICAL outage
+                must be able to say "anyway" (spec07 §6). */}
+            {needsOverride && (
+              <label className="flex items-start gap-2 text-sm text-text">
+                <input
+                  type="checkbox"
+                  name="override_capacity"
+                  value="true"
+                  className="mt-1 cursor-pointer accent-accent"
+                />
+                <span>
+                  Assign anyway (over their limit)
+                  <span className="block text-xs text-text/60">
+                    Recorded on the ticket&apos;s history.
+                  </span>
+                </span>
+              </label>
+            )}
             <div className="flex gap-2">
-              <Button type="submit" variant="primary" disabled={pending}>
+              <Button type="submit" variant="primary" disabled={pending || !chosen}>
                 {label}
               </Button>
               <Button variant="ghost" onClick={() => setOpen(false)}>

@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { apiFetch } from "@/lib/api/client";
-import { replacePriorityRules } from "@/lib/api/admin";
+import { replacePriorityRules, setAssignmentConfig, updateStaff } from "@/lib/api/admin";
+import { assertSameOrigin } from "@/lib/auth/csrf";
 import { getSession } from "@/lib/auth/session";
 import type { Category, CustomerTier, Priority, PriorityRuleEntry, Role } from "@/lib/types";
 
@@ -17,6 +18,7 @@ export async function createStaffAction(
   _previous: AdminState,
   formData: FormData,
 ): Promise<AdminState> {
+  await assertSameOrigin();
   const session = await getSession();
   if (!session) redirect("/sign-in");
 
@@ -50,6 +52,7 @@ export async function setStaffActiveAction(
   _previous: AdminState,
   formData: FormData,
 ): Promise<AdminState> {
+  await assertSameOrigin();
   const session = await getSession();
   if (!session) redirect("/sign-in");
 
@@ -71,6 +74,7 @@ export async function savePriorityMatrixAction(
   _previous: AdminState,
   formData: FormData,
 ): Promise<AdminState> {
+  await assertSameOrigin();
   const session = await getSession();
   if (!session) redirect("/sign-in");
 
@@ -96,6 +100,66 @@ export async function savePriorityMatrixAction(
           ? result.error.message
           : "Could not save the matrix. Try again.",
     };
+  }
+
+  revalidatePath("/configuration");
+  return { ok: true };
+}
+
+/**
+ * Capacity and automation opt-out (spec07 frontend §4).
+ *
+ * Sends only these two fields, so the PATCH cannot accidentally change
+ * activation — the backend update is partial for exactly that reason.
+ */
+export async function updateStaffAction(
+  _previous: AdminState,
+  formData: FormData,
+): Promise<AdminState> {
+  await assertSameOrigin();
+  const session = await getSession();
+  if (!session) redirect("/sign-in");
+
+  const userId = String(formData.get("user_id") ?? "");
+  const raw = String(formData.get("max_open_tickets") ?? "").trim();
+  // Blank clears the ceiling — "no limit" is a real setting, not a missing one.
+  const maxOpenTickets = raw === "" ? null : Number(raw);
+  if (maxOpenTickets !== null && (Number.isNaN(maxOpenTickets) || maxOpenTickets < 1)) {
+    return { error: "A ticket limit must be 1 or more, or blank for no limit." };
+  }
+
+  const result = await updateStaff(session.token, userId, {
+    max_open_tickets: maxOpenTickets,
+    accepts_auto_assignment: formData.get("accepts_auto_assignment") === "true",
+  });
+  if (!result.ok) {
+    if (result.error.code === "UNAUTHENTICATED") redirect("/sign-in");
+    return { error: result.error.message };
+  }
+
+  revalidatePath("/users");
+  return { ok: true };
+}
+
+/** Strategy and the auto-assign switch (spec07 frontend §5). */
+export async function setAssignmentAction(
+  _previous: AdminState,
+  formData: FormData,
+): Promise<AdminState> {
+  await assertSameOrigin();
+  const session = await getSession();
+  if (!session) redirect("/sign-in");
+
+  const result = await setAssignmentConfig(session.token, {
+    strategy: String(formData.get("strategy") ?? "MANUAL") as
+      | "MANUAL"
+      | "ROUND_ROBIN"
+      | "LEAST_LOADED",
+    auto_assign_on_create: formData.get("auto_assign_on_create") === "true",
+  });
+  if (!result.ok) {
+    if (result.error.code === "UNAUTHENTICATED") redirect("/sign-in");
+    return { error: result.error.message };
   }
 
   revalidatePath("/configuration");
