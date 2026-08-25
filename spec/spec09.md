@@ -159,3 +159,44 @@ total; the two averages are distinguishable at a glance; zero buckets are visibl
 colour discipline holds — no accent, no borrowed signalling colours, everything direct-labelled; the
 per-agent attribution caveat is on screen; export streams, carries the current filters, and states
 its cap.
+
+---
+
+## 8. As Built
+
+Deltas between this spec and the shipped code:
+
+- **The range logic lives in `lib/metrics-range.ts`, not inside
+  `date-range.tsx`.** Pure and DOM-free, so the 31/32 and 182/183 bucket
+  boundaries are testable without rendering anything — the same split as
+  `lib/sla.ts`. `date-range.tsx` is the client shell over it.
+- **Tabs are links with `aria-current`, not `role="tablist"`.** The ARIA tabs
+  pattern promises arrow-key movement between panels in one document; these are
+  separate page renders. Marking it up as a nav of links tells screen readers
+  the truth.
+- **`ui/tabs.tsx` does not use `ui/select`'s sibling for the range pickers.**
+  `Select` always emits an empty placeholder option, which is right for a filter
+  — clearing it means "any" — and wrong for a period, where there is no such
+  thing as none. `date-range.tsx` carries a local placeholder-free `Choice`
+  with the same classes.
+- **`aria-sort` sits on the `<th>`, not the sort link.** A link's implicit role
+  does not support it and the state would be dropped; eslint's
+  `jsx-a11y/role-supports-aria-props` caught this.
+- **The export button fetches rather than linking.** A plain `<a download>`
+  gives no way to catch the 422 over the row cap — the browser would navigate to
+  a page of error text. Fetching keeps the failure inside the app, where it is a
+  sentence naming the limit and the fix.
+- **`charts.test.tsx` asserts against the source, not the DOM.** Recharts renders
+  through a `ResponsiveContainer` that measures to zero under jsdom, so no marks
+  exist to query. The rules being guarded — which token a series is given — are
+  properties of the code and survive the read. The `(staff)/dashboard` test is
+  written the same way, and for the same reason: the page is an async Server
+  Component whose every dependency would have to be mocked.
+- **The dashboard iterates `PRIORITIES`/`TIERS`/`CATEGORIES` from
+  `lib/filters`** rather than re-listing enum members, so a new tier reaches the
+  breakdowns without anyone remembering this file.
+- **`GroupMetrics` replaced `PriorityMetrics` in the generated schema.** The
+  backend renamed the model when it gained two more dimensions; `lib/types.ts`
+  re-exports the new name and keeps `PriorityMetrics` as an alias for the
+  by-priority call sites. The compile break on `npm run gen:api` was the drift
+  alarm working as designed.

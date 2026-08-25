@@ -292,9 +292,103 @@ export interface paths {
         };
         /**
          * Get Overview
-         * @description Get global and priority-scoped metrics (Admin only).
+         * @description Current-state metrics, globally and sliced by priority, tier and category.
+         *
+         *     Every enum member is present even at zero, so a dashboard never has to
+         *     branch on a missing key.
          */
         get: operations["get_overview_api_v1_metrics_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/metrics/timeseries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Timeseries
+         * @description Bucketed history, with **empty buckets emitted as zero**.
+         *
+         *     A chart that silently omits a quiet day draws a straight line through the
+         *     gap and misreports it as steady activity (spec09 §3).
+         *
+         *     Bucketing is UTC, matching the `timestamptz` storage. Timezone-aware
+         *     bucketing is out of scope; it is stated here so it is a known limitation
+         *     rather than an assumed feature. A range over 366 buckets is refused with
+         *     422 rather than truncated.
+         */
+        get: operations["get_timeseries_api_v1_metrics_timeseries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/metrics/agents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Agent Metrics
+         * @description Per-agent workload and performance over a period.
+         *
+         *     **Attribution is by current assignee**, and the response says so in
+         *     `attribution_note`. A reassigned ticket counts entirely toward whoever
+         *     holds it now; true attribution would mean reconstructing custody windows
+         *     from `ASSIGNMENT` events and apportioning time between holders. Shipping
+         *     the caveat in the payload is deliberate — an unlabelled approximation in a
+         *     performance metric is worse than no metric, because someone will manage
+         *     against it.
+         *
+         *     Inactive agents holding tickets in range are included, or the period's
+         *     totals stop reconciling with the overview.
+         */
+        get: operations["get_agent_metrics_api_v1_metrics_agents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/metrics/export/tickets.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Tickets Csv
+         * @description Export the ticket list as CSV.
+         *
+         *     **The same filter set as `GET /tickets`**, built from the same
+         *     `filter_predicates`, so an admin exports exactly the view they are looking
+         *     at rather than learning a second filter language.
+         *
+         *     Streamed over a server-side cursor: this process also hosts the SLA
+         *     monitor, and materialising a large export would stall breach detection.
+         *     Over `APP_EXPORT_MAX_ROWS` the request is refused with 422 — checked before
+         *     the first byte, because a streamed response cannot be turned back into an
+         *     error, and a truncated file that does not say so is a wrong answer.
+         *
+         *     No ticket body and no comment text: operational data, not a content dump.
+         */
+        get: operations["export_tickets_csv_api_v1_metrics_export_tickets_csv_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -512,6 +606,46 @@ export interface components {
          * @enum {string}
          */
         ActorType: "CUSTOMER" | "USER" | "SYSTEM";
+        /** AgentMetrics */
+        AgentMetrics: {
+            agent: components["schemas"]["AgentSummary"];
+            /** Open Tickets */
+            open_tickets: number;
+            /** In Progress */
+            in_progress: number;
+            /** Pending Customer */
+            pending_customer: number;
+            /** Resolved In Period */
+            resolved_in_period: number;
+            /** Sla Met Rate */
+            sla_met_rate: number;
+            /** Avg Working Seconds */
+            avg_working_seconds: number;
+            /** Current Load Pct */
+            current_load_pct: number | null;
+        };
+        /** AgentMetricsResponse */
+        AgentMetricsResponse: {
+            /** Items */
+            items: components["schemas"]["AgentMetrics"][];
+            /**
+             * Attribution Note
+             * @default Tickets count toward whoever is assigned to them now. Reassigned tickets count entirely toward their current owner.
+             */
+            attribution_note: string;
+        };
+        /** AgentSummary */
+        AgentSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Is Active */
+            is_active: boolean;
+        };
         /**
          * AssigneeSummary
          * @description Just enough to name the owner; never exposes staff email or role.
@@ -702,6 +836,32 @@ export interface components {
          * @enum {string}
          */
         EventType: "CREATED" | "STATUS_CHANGE" | "ASSIGNMENT" | "COMMENT" | "SLA_BREACH" | "ATTACHMENT";
+        /**
+         * GroupMetrics
+         * @description One slice of the ticket population, by priority, tier or category.
+         */
+        GroupMetrics: {
+            /** Open */
+            open: number;
+            /** In Progress */
+            in_progress: number;
+            /** Pending Customer */
+            pending_customer: number;
+            /** Resolved */
+            resolved: number;
+            /** Closed */
+            closed: number;
+            /** Breached Open */
+            breached_open: number;
+            /** Breach Rate */
+            breach_rate: number;
+            /** Avg Resolution Seconds */
+            avg_resolution_seconds: number;
+            /** Avg Working Seconds */
+            avg_working_seconds: number;
+            /** Sla Met Rate */
+            sla_met_rate: number;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -736,6 +896,8 @@ export interface components {
             open: number;
             /** In Progress */
             in_progress: number;
+            /** Pending Customer */
+            pending_customer: number;
             /** Resolved */
             resolved: number;
             /** Closed */
@@ -746,9 +908,21 @@ export interface components {
             breach_rate: number;
             /** Avg Resolution Seconds */
             avg_resolution_seconds: number;
+            /** Avg Working Seconds */
+            avg_working_seconds: number;
+            /** Sla Met Rate */
+            sla_met_rate: number;
             /** By Priority */
             by_priority: {
-                [key: string]: components["schemas"]["PriorityMetrics"];
+                [key: string]: components["schemas"]["GroupMetrics"];
+            };
+            /** By Tier */
+            by_tier: {
+                [key: string]: components["schemas"]["GroupMetrics"];
+            };
+            /** By Category */
+            by_category: {
+                [key: string]: components["schemas"]["GroupMetrics"];
             };
         };
         /**
@@ -821,23 +995,6 @@ export interface components {
         PriorityMatrixUpdate: {
             /** Rules */
             rules: components["schemas"]["PriorityRuleEntry"][];
-        };
-        /** PriorityMetrics */
-        PriorityMetrics: {
-            /** Open */
-            open: number;
-            /** In Progress */
-            in_progress: number;
-            /** Resolved */
-            resolved: number;
-            /** Closed */
-            closed: number;
-            /** Breached Open */
-            breached_open: number;
-            /** Breach Rate */
-            breach_rate: number;
-            /** Avg Resolution Seconds */
-            avg_resolution_seconds: number;
         };
         /** PriorityRuleEntry */
         PriorityRuleEntry: {
@@ -1101,6 +1258,47 @@ export interface components {
          * @enum {string}
          */
         TicketStatus: "OPEN" | "IN_PROGRESS" | "PENDING_CUSTOMER" | "RESOLVED" | "CLOSED";
+        /** TimeseriesPoint */
+        TimeseriesPoint: {
+            /**
+             * Bucket Start
+             * Format: date-time
+             */
+            bucket_start: string;
+            /** Value */
+            value: number;
+        };
+        /**
+         * TimeseriesResponse
+         * @description Empty buckets are emitted as zero, never omitted.
+         *
+         *     A chart that silently drops a quiet day draws a straight line through the
+         *     gap and misreports it as steady activity (spec09 §3).
+         */
+        TimeseriesResponse: {
+            /**
+             * Bucket
+             * @enum {string}
+             */
+            bucket: "day" | "week" | "month";
+            /**
+             * Metric
+             * @enum {string}
+             */
+            metric: "created" | "resolved" | "breached" | "breach_rate";
+            /**
+             * Range From
+             * Format: date-time
+             */
+            range_from: string;
+            /**
+             * Range To
+             * Format: date-time
+             */
+            range_to: string;
+            /** Points */
+            points: components["schemas"]["TimeseriesPoint"][];
+        };
         /** TokenResponse */
         TokenResponse: {
             /** Access Token */
@@ -1824,6 +2022,114 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MetricsOverview"];
+                };
+            };
+        };
+    };
+    get_timeseries_api_v1_metrics_timeseries_get: {
+        parameters: {
+            query?: {
+                metric?: "created" | "resolved" | "breached" | "breach_rate";
+                bucket?: "day" | "week" | "month";
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimeseriesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_agent_metrics_api_v1_metrics_agents_get: {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentMetricsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_tickets_csv_api_v1_metrics_export_tickets_csv_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                status?: components["schemas"]["TicketStatus"] | null;
+                priority?: components["schemas"]["Priority"] | null;
+                category?: components["schemas"]["Category"] | null;
+                breached?: boolean | null;
+                assigned?: boolean | null;
+                escalated?: boolean | null;
+                tier?: components["schemas"]["CustomerTier"] | null;
+                assignee_id?: string | null;
+                customer_id?: string | null;
+                created_after?: string | null;
+                created_before?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Streamed CSV. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

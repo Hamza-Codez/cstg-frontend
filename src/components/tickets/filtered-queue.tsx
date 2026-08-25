@@ -15,6 +15,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 
 import { deleteSavedViewAction } from "@/app/actions/saved-views";
+import { ExportButton } from "@/components/metrics/export-button";
 import { FilterBar } from "@/components/tickets/filters";
 import { QueueView } from "@/components/tickets/queue-view";
 import { SavedViews } from "@/components/tickets/saved-views";
@@ -54,7 +55,18 @@ export async function FilteredQueue({
           <SavedViews views={views} role={session.role} onDelete={deleteSavedViewAction} />
         }
       />
-      <QueueView title={title} tickets={tickets} empty={empty} error={error} />
+      <div className="flex flex-col gap-2">
+        {/* The export carries the URL's filters, so it always matches what is
+            on screen — the backend accepts the same filter set for exactly
+            that reason (spec09 §6). Admin-only, matching the endpoint: absent
+            for other roles rather than present and 403ing. */}
+        {session.role === "ADMIN" && (
+          <div className="flex justify-end">
+            <ExportButton />
+          </div>
+        )}
+        <QueueView title={title} tickets={tickets} empty={empty} error={error} />
+      </div>
     </div>
   );
 }

@@ -35,24 +35,26 @@ export function TopBar({
           <GlobalSearch action="/tickets" placeholder="Search tickets" />
         </div>
       )}
-      <div className="flex items-center gap-2">
-        {/* Both shells: a customer waiting on a reply is the clearest case
-            for this in the whole product (spec08 frontend §1). */}
-        <NotificationBell audience={audience} />
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          {/* Both shells: a customer waiting on a reply is the clearest case
+              for this in the whole product (spec08 frontend §1). */}
+          <NotificationBell audience={audience} />
+        </div>
+        {/* Posts to the /sign-out route rather than a Server Action.
+            Action ids are regenerated on every build, so a tab opened before a
+            deploy submits an id the server no longer knows and gets
+            "Server Action was not found". A route URL is stable across builds. */}
+        <form action="/sign-out" method="post">
+          <button
+            type="submit"
+            className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm transition-colors duration-fast hover:bg-text-inverse/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            <LogOut aria-hidden className="size-4" strokeWidth={1.5} />
+            {ACTIONS.signOut}
+          </button>
+        </form>
       </div>
-      {/* Posts to the /sign-out route rather than a Server Action.
-          Action ids are regenerated on every build, so a tab opened before a
-          deploy submits an id the server no longer knows and gets
-          "Server Action was not found". A route URL is stable across builds. */}
-      <form action="/sign-out" method="post">
-        <button
-          type="submit"
-          className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm transition-colors duration-fast hover:bg-text-inverse/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        >
-          <LogOut aria-hidden className="size-4" strokeWidth={1.5} />
-          {ACTIONS.signOut}
-        </button>
-      </form>
     </header>
   );
 }
