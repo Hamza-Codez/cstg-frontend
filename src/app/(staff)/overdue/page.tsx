@@ -13,6 +13,7 @@ export default async function OverduePage({
       empty="Nothing is overdue. The queue is healthy."
       searchParams={await searchParams}
       baseFilters={{ breached: true }}
+      selectable={true}
     />
   );
 }

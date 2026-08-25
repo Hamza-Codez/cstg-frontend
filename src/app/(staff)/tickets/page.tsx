@@ -12,6 +12,7 @@ export default async function TicketsPage({
       title="All tickets"
       empty="No tickets match this view."
       searchParams={await searchParams}
+      selectable={true}
     />
   );
 }

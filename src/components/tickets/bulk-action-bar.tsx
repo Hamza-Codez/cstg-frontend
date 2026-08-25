@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { CheckCircle2, RefreshCw, Users } from "lucide-react"
 
 import { bulkAssignAction, bulkTransitionAction } from "@/app/actions/bulk"
@@ -9,6 +9,8 @@ import { Card, CardBody } from "@/components/ui/card"
 import { Combobox } from "@/components/ui/combobox"
 import { Modal } from "@/components/ui/modal"
 import type { BulkResult, StaffRole, UserSummary } from "@/lib/types"
+
+import { createPortal } from "react-dom"
 
 export function BulkActionBar({
   selectedIds,
@@ -26,35 +28,49 @@ export function BulkActionBar({
   onResult: (result: BulkResult) => void
 }) {
   const count = selectedIds.size
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   if (count === 0) return null
 
-  return (
-    <Card className="mb-4 border-blue-200 bg-blue-50/50">
-      <CardBody className="flex items-center justify-between py-2">
-        <span className="text-sm font-medium text-blue-900">
-          {count} selected on this page.
-        </span>
-        <div className="flex items-center gap-2">
-          {(role === "DISPATCHER" || role === "ADMIN") && (
-            <BulkAssignDialog
-              selectedIds={selectedIds}
-              agents={agents}
-              onClear={onClear}
-              onResult={onResult}
-            />
-          )}
-          <BulkCloseDialog
+  const content = (
+    <div className="flex w-full items-center justify-between gap-4 rounded-sm border border-blue-200 bg-blue-50/50 px-3 py-1.5 shadow-sm md:w-auto md:justify-end">
+      <span className="text-sm font-medium text-blue-900 whitespace-nowrap">
+        {count} selected
+      </span>
+      <div className="flex items-center gap-2">
+        {(role === "DISPATCHER" || role === "ADMIN") && (
+          <BulkAssignDialog
             selectedIds={selectedIds}
+            agents={agents}
             onClear={onClear}
             onResult={onResult}
           />
-          <Button variant="ghost" onClick={onClear}>
-            Cancel
-          </Button>
-        </div>
-      </CardBody>
-    </Card>
+        )}
+        <BulkCloseDialog
+          selectedIds={selectedIds}
+          onClear={onClear}
+          onResult={onResult}
+        />
+        <Button variant="ghost" onClick={onClear}>
+          Cancel
+        </Button>
+      </div>
+    </div>
+  )
+
+  const portalEl = mounted ? document.getElementById("bulk-action-portal-desktop") : null
+
+  return (
+    <>
+      <div className={portalEl ? "md:hidden mb-4" : "mb-4"}>
+        {content}
+      </div>
+      {portalEl && createPortal(content, portalEl)}
+    </>
   )
 }
 

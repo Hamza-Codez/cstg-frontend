@@ -13,6 +13,7 @@ export default async function UnassignedPage({
       empty="Everything has an owner. Nothing to triage."
       searchParams={await searchParams}
       baseFilters={{ assigned: false }}
+      selectable={true}
     />
   );
 }

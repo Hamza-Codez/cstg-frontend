@@ -134,7 +134,7 @@ export function NotificationFeed({
                   void onDismiss(item);
                 }}
                 aria-label={`Dismiss — ${notificationSentence(item, audience)}`}
-                className="absolute right-2 top-2 cursor-pointer rounded-sm p-2 bg-blue-900 text-white transition-colors hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                className="absolute right-2 top-2 cursor-pointer rounded-sm border border-control-border bg-control p-1 text-text-inverse transition-colors hover:bg-control-hover hover:border-control-border-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
               >
                 <X aria-hidden strokeWidth={1.5} className="size-4" />
               </button>

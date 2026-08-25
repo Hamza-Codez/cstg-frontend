@@ -201,7 +201,10 @@ export function FilterBar({
   return (
     <div className="flex flex-col gap-3">
       {/* Desktop */}
-      <div className="hidden md:block">{controls}</div>
+      <div className="hidden md:flex w-full items-end justify-between gap-3">
+        {controls}
+        <div id="bulk-action-portal-desktop" className="empty:hidden" />
+      </div>
 
       {/* Mobile: the selectors collapse behind a trigger showing the active
           count, so a user who scrolled past them still knows the list is

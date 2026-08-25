@@ -56,6 +56,12 @@ export type SlaPolicySummary = Schemas["SlaPolicySummary"];
 export type SlaPolicyVersionSummary = Schemas["SlaPolicyVersionSummary"];
 export type EventType = Schemas["EventType"];
 
+export type BulkResultItem = Schemas["BulkItemResult"];
+export type BulkResult = Schemas["BulkResult"];
+export type BulkAssignmentRequest = Schemas["BulkAssignmentRequest"];
+export type BulkTransitionRequest = Schemas["BulkTransitionRequest"];
+export type BulkReassignmentRequest = Schemas["BulkReassignmentRequest"];
+
 /** Which vocabulary to render in (docs/UIUX_FRONTEND.md §4). */
 export type Audience = "customer" | "staff";
 
