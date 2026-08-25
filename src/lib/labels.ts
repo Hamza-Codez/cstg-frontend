@@ -12,6 +12,7 @@ import type {
   Category,
   CommentType,
   CustomerTier,
+  EventType,
   Priority,
   Role,
   TicketStatus,
@@ -121,4 +122,39 @@ export function commentTypeLabel(type: CommentType): string {
 
 export function term(key: keyof typeof TERMS, audience: Audience): string {
   return TERMS[key][audience];
+}
+
+/**
+ * One plain sentence per notification (spec08 frontend §5).
+ *
+ * Rows are sentences, never enum names. Customers never receive an
+ * INTERNAL_NOTE notification — the backend filters on detail.type — but the
+ * customer branch is written as if they might, so this is not the only thing
+ * standing between an internal note and a customer.
+ */
+export function notificationSentence(
+  event: { type: EventType; actor_name?: string | null; to_status?: TicketStatus | null },
+  audience: Audience,
+): string {
+  const actor = event.actor_name ?? "Support";
+
+  switch (event.type) {
+    case "COMMENT":
+      return audience === "customer" ? "Support replied to your request" : `${actor} replied`;
+    case "STATUS_CHANGE": {
+      const status = event.to_status ? statusLabel(event.to_status, audience) : "";
+      return audience === "customer"
+        ? `Your request is now ${status}`
+        : `${actor} moved this to ${status}`;
+    }
+    case "SLA_BREACH":
+      return audience === "customer" ? "Taking longer than expected" : "SLA breached";
+    case "ASSIGNMENT":
+      // Customers never receive these — who works a ticket is internal routing.
+      return event.actor_name ? `${actor} reassigned this` : "Assigned automatically";
+    case "ATTACHMENT":
+      return audience === "customer" ? "A file was added" : `${actor} attached a file`;
+    case "CREATED":
+      return audience === "customer" ? "You sent this request" : `${actor} raised a ticket`;
+  }
 }

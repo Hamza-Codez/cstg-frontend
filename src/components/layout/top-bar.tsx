@@ -7,9 +7,20 @@
 import { LogOut, LifeBuoy } from "lucide-react";
 
 import { GlobalSearch } from "@/components/layout/global-search";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { ACTIONS } from "@/lib/labels";
+import type { Audience } from "@/lib/types";
 
-export function TopBar({ subtitle, search }: { subtitle?: string; search?: boolean }) {
+export function TopBar({
+  subtitle,
+  search,
+  audience = "staff",
+}: {
+  subtitle?: string;
+  search?: boolean;
+  /** Drives the notification vocabulary and where a row links to. */
+  audience?: Audience;
+}) {
   return (
     <header className="flex items-center justify-between gap-4 bg-gradient-header px-4 py-3 text-text-inverse">
       <div className="flex items-center gap-2">
@@ -24,6 +35,11 @@ export function TopBar({ subtitle, search }: { subtitle?: string; search?: boole
           <GlobalSearch action="/tickets" placeholder="Search tickets" />
         </div>
       )}
+      <div className="flex items-center gap-2">
+        {/* Both shells: a customer waiting on a reply is the clearest case
+            for this in the whole product (spec08 frontend §1). */}
+        <NotificationBell audience={audience} />
+      </div>
       {/* Posts to the /sign-out route rather than a Server Action.
           Action ids are regenerated on every build, so a tab opened before a
           deploy submits an id the server no longer knows and gets

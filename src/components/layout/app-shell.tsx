@@ -8,22 +8,25 @@ import type { ReactNode } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/top-bar";
 import type { NavItem } from "@/config/nav";
+import type { Audience } from "@/lib/types";
 
 export function AppShell({
   nav,
   subtitle,
   search = false,
+  audience = "staff",
   children,
 }: {
   nav: NavItem[];
   subtitle?: string;
+  audience?: Audience;
   /** Staff get the global ticket search; the portal has its own, scoped one. */
   search?: boolean;
   children: ReactNode;
 }) {
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <TopBar subtitle={subtitle} search={search} />
+      <TopBar subtitle={subtitle} search={search} audience={audience} />
       <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
         <Sidebar items={nav} />
         <div className="flex-1 overflow-y-auto custom-scrollbar">

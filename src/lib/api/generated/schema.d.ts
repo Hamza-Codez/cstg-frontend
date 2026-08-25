@@ -446,6 +446,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Notifications */
+        get: operations["list_notifications_api_v1_notifications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Notification Count
+         * @description The badge-only path.
+         *
+         *     Separate from the list endpoint precisely so the frequent poll stays cheap;
+         *     the UI must not poll the list to derive a count.
+         */
+        get: operations["notification_count_api_v1_notifications_count_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Read */
+        post: operations["mark_read_api_v1_notifications_read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -668,6 +725,11 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** MarkReadRequest */
+        MarkReadRequest: {
+            /** Up To */
+            up_to?: string | null;
+        };
         /** MetricsOverview */
         MetricsOverview: {
             /** Open */
@@ -688,6 +750,52 @@ export interface components {
             by_priority: {
                 [key: string]: components["schemas"]["PriorityMetrics"];
             };
+        };
+        /**
+         * NotificationCount
+         * @description The cheap badge-only shape, so the frequent poll stays small.
+         */
+        NotificationCount: {
+            /** Unread Count */
+            unread_count: number;
+        };
+        /** NotificationItem */
+        NotificationItem: {
+            /**
+             * Event Id
+             * Format: uuid
+             */
+            event_id: string;
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
+            /** Ticket Subject */
+            ticket_subject: string;
+            type: components["schemas"]["EventType"];
+            actor_type: components["schemas"]["ActorType"];
+            /** Actor Name */
+            actor_name?: string | null;
+            from_status?: components["schemas"]["TicketStatus"] | null;
+            to_status?: components["schemas"]["TicketStatus"] | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** NotificationPage */
+        NotificationPage: {
+            /** Items */
+            items: components["schemas"]["NotificationItem"][];
+            /** Unread Count */
+            unread_count: number;
+            /**
+             * Last Read At
+             * Format: date-time
+             */
+            last_read_at: string;
         };
         /** PaginatedTicketResponse */
         PaginatedTicketResponse: {
@@ -1933,6 +2041,90 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_notifications_api_v1_notifications_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    notification_count_api_v1_notifications_count_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationCount"];
+                };
+            };
+        };
+    };
+    mark_read_api_v1_notifications_read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkReadRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationCount"];
+                };
             };
             /** @description Validation Error */
             422: {

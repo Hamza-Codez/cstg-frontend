@@ -18,5 +18,5 @@ export default async function PortalLayout({ children }: { children: ReactNode }
   if (!session) redirect("/sign-in");
   if (session.principalType !== "CUSTOMER") redirect(landingFor(session.role));
 
-  return <AppShell nav={navFor(session.role)}>{children}</AppShell>;
+  return <AppShell nav={navFor(session.role)} audience="customer">{children}</AppShell>;
 }
