@@ -14,7 +14,7 @@
  * port `next dev` actually bound to, and on Vercel preview URLs, whose origin is
  * not known at build time.
  *
- * `APP_FRONTEND_ORIGIN`, when set, is accepted as an ADDITIONAL allowed origin
+ * `FRONTEND_ORIGIN`, when set, is accepted as an ADDITIONAL allowed origin
  * for deployments behind a proxy that rewrites Host. It is never *required* —
  * requiring it is what turned a missing or mismatched value into a 500 on every
  * mutation.
@@ -30,7 +30,7 @@ export function isSameOrigin(claimed: string | null, host: string | null): boole
   }
   if (claimedHost === host) return true;
 
-  const configured = process.env.APP_FRONTEND_ORIGIN;
+  const configured = process.env.FRONTEND_ORIGIN;
   if (!configured) return false;
   try {
     return claimedHost === new URL(configured).host;
