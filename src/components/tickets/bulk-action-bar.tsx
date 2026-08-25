@@ -1,11 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { CheckCircle2, RefreshCw, Users } from "lucide-react"
+import { CheckCircle2 } from "lucide-react"
 
 import { bulkAssignAction, bulkTransitionAction } from "@/app/actions/bulk"
 import { Button } from "@/components/ui/button"
-import { Card, CardBody } from "@/components/ui/card"
 import { Combobox } from "@/components/ui/combobox"
 import { Modal } from "@/components/ui/modal"
 import type { BulkResult, StaffRole, UserSummary } from "@/lib/types"
@@ -14,14 +13,12 @@ import { createPortal } from "react-dom"
 
 export function BulkActionBar({
   selectedIds,
-  tickets,
   role,
   agents,
   onClear,
   onResult,
 }: {
   selectedIds: Set<string>
-  tickets: { id: string; subject: string }[]
   role: StaffRole
   agents: UserSummary[]
   onClear: () => void
