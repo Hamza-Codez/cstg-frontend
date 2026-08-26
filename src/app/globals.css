@@ -3,12 +3,29 @@
 @tailwind utilities;
 
 @layer base {
+  /* The clip belongs HERE, not on body.
+   *
+   * CSS propagates the body's overflow to the viewport whenever html is
+   * `overflow: visible`, and body then computes to visible itself — so
+   * `body { overflow: hidden }` removed the viewport scrollbar without ever
+   * clipping anything. The app shell had no real boundary: content could grow
+   * past the fold, and because the viewport had been told not to scroll, there
+   * was no way to reach it. Submitting a reply made the page taller while the
+   * outlet kept its scroll position, which is how a band appeared at the bottom
+   * with the top cut off, and why a refresh "fixed" it.
+   *
+   * Verified rather than assumed: with the rule on body, a probe at top:5000px
+   * grew documentElement.scrollHeight to 5010. On html it does not.
+   */
+  html {
+    overflow: hidden;
+  }
+
   body {
     background-color: var(--color-app-bg);
     background-image: var(--gradient-app);
     background-attachment: fixed;
     min-height: 100vh;
-    overflow: hidden; /* Prevents double scrollbar alongside app-shell */
     color: var(--color-text);
     /* Hierarchy comes from size, colour, and spacing — not weight (§2.4). */
     font-weight: 400;
