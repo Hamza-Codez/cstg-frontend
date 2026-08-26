@@ -126,11 +126,25 @@ export function Select({
   }, [open]);
 
   // Keep the active option in view when arrowing past the visible window.
+  //
+  // Deliberately NOT `scrollIntoView`: that walks up and scrolls the nearest
+  // scrollable ancestor, which here is the app shell's main outlet — so simply
+  // opening the dropdown jerked the whole page upward. Setting `scrollTop` on
+  // the list touches nothing outside it, and does nothing at all while every
+  // option already fits, which is the common case.
   useEffect(() => {
     if (!open) return;
-    listRef.current
-      ?.querySelector(`[data-index="${active}"]`)
-      ?.scrollIntoView({ block: "nearest" });
+    const list = listRef.current;
+    const option = list?.querySelector<HTMLElement>(`[data-index="${active}"]`);
+    if (!list || !option) return;
+
+    const top = option.offsetTop;
+    const bottom = top + option.offsetHeight;
+    if (top < list.scrollTop) {
+      list.scrollTop = top;
+    } else if (bottom > list.scrollTop + list.clientHeight) {
+      list.scrollTop = bottom - list.clientHeight;
+    }
   }, [active, open]);
 
   function onKeyDown(event: KeyboardEvent) {
@@ -238,7 +252,11 @@ export function Select({
           aria-label={label}
           aria-activedescendant={`${selectId}-option-${active}`}
           tabIndex={-1}
-          className="custom-scrollbar absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-border bg-surface py-1 shadow-lg"
+          // `w-max` sizes to the longest option, `min-w-full` stops it being
+          // narrower than the trigger, and `max-w-` keeps a long label from
+          // running off a narrow viewport. Square corners are deliberate: the
+          // panel reads as an extension of the field, not a separate card.
+          className="custom-scrollbar absolute z-30 mt-1 max-h-60 w-max min-w-full max-w-[min(22rem,80vw)] overflow-y-auto rounded-none border border-border bg-surface py-0.5 shadow-lg"
         >
           {rows.map((row, index) => {
             const isSelected = row.value === current;
@@ -253,7 +271,7 @@ export function Select({
                 onMouseEnter={() => setActive(index)}
                 onClick={() => commit(row.value)}
                 className={cn(
-                  "flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-sm",
+                  "flex cursor-pointer items-center justify-between gap-3 px-3 py-1 text-sm",
                   // Palette, not the OS. This is the whole reason the native
                   // control was replaced.
                   isActive ? "bg-structure text-text-inverse" : "text-text",
@@ -261,7 +279,7 @@ export function Select({
                   row.value === "" && !isActive && "text-text-muted",
                 )}
               >
-                <span className="truncate">{row.label}</span>
+                <span className="whitespace-nowrap">{row.label}</span>
                 {/* A tick as well as the fill, so the current value survives
                     greyscale and never rests on colour alone. */}
                 {isSelected && <Check aria-hidden strokeWidth={2} className="size-4 shrink-0" />}
