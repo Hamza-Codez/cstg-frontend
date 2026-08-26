@@ -165,3 +165,33 @@ export async function setAssignmentAction(
   revalidatePath("/configuration");
   return { ok: true };
 }
+
+/**
+ * Delete a staff row that has never been used.
+ *
+ * The backend refuses (422) anyone who has held a ticket, written a comment,
+ * published an SLA policy or authored an audit event, and says what they
+ * touched. That message is surfaced verbatim rather than replaced with
+ * something generic — "deleting them would leave that history attributed to
+ * nobody, deactivate instead" is the whole explanation, and rewording it here
+ * would only make it vaguer.
+ */
+export async function deleteStaffAction(
+  _previous: AdminState,
+  formData: FormData,
+): Promise<AdminState> {
+  await assertSameOrigin();
+  const session = await getSession();
+  if (!session) redirect("/sign-in");
+
+  const userId = String(formData.get("user_id") ?? "");
+
+  const result = await apiFetch(`/api/v1/users/${userId}`, {
+    method: "DELETE",
+    token: session.token,
+  });
+  if (!result.ok) return { error: result.error.message };
+
+  revalidatePath("/users");
+  return { ok: true };
+}

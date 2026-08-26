@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
 
-import { ActiveToggle, AgentRouting, StaffForm } from "@/components/forms/staff-form";
+import {
+  ActiveToggle,
+  AgentRouting,
+  DeleteStaff,
+  StaffForm,
+} from "@/components/forms/staff-form";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableHead, Td, Th, Tr } from "@/components/ui/table";
 import { listStaff } from "@/lib/api/admin";
@@ -75,11 +80,20 @@ export default async function UsersPage() {
                 )}
               </Td>
               <Td>
-                <ActiveToggle
-                  userId={member.id}
-                  isActive={member.is_active}
-                  isSelf={member.id === session.principalId}
-                />
+                {/* Deactivate first, Delete second and quieter: deactivation is
+                    the routine action and the one that keeps history. */}
+                <div className="flex items-center justify-end gap-1">
+                  <ActiveToggle
+                    userId={member.id}
+                    isActive={member.is_active}
+                    isSelf={member.id === session.principalId}
+                  />
+                  <DeleteStaff
+                    userId={member.id}
+                    name={member.name}
+                    isSelf={member.id === session.principalId}
+                  />
+                </div>
               </Td>
             </Tr>
           ))}

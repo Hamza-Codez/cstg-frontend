@@ -2,15 +2,17 @@
 
 /** Create staff (docs/UIUX_FRONTEND.md §7.4.3). */
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 
 import {
   createStaffAction,
+  deleteStaffAction,
   setStaffActiveAction,
   updateStaffAction,
   type AdminState,
 } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import { Field, Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 
@@ -27,11 +29,31 @@ export function StaffForm() {
   }, [state, show]);
 
   return (
-    <form action={formAction} className="flex flex-col gap-4 sm:flex-row sm:items-end">
-      <div className="flex-1"><Input label="Name" name="name" required /></div>
-      <div className="flex-1"><Input label="Email" name="email" type="email" required /></div>
+    // `autoComplete="off"` on the form and per field. Browsers otherwise fill
+    // the SIGNED-IN ADMIN's own email and password here, because it looks like
+    // a login form — and submitting that silently creates a second staff
+    // account with the admin's credentials. `new-password` on the password
+    // field is the part Chrome actually honours; `off` alone it ignores.
+    <form
+      action={formAction}
+      autoComplete="off"
+      className="flex flex-col gap-4 sm:flex-row sm:items-end"
+    >
       <div className="flex-1">
-        <Input label="Temporary password" name="password" type="password" minLength={8} required />
+        <Input label="Name" name="name" autoComplete="off" required />
+      </div>
+      <div className="flex-1">
+        <Input label="Email" name="email" type="email" autoComplete="off" required />
+      </div>
+      <div className="flex-1">
+        <Input
+          label="Temporary password"
+          name="password"
+          type="password"
+          autoComplete="new-password"
+          minLength={8}
+          required
+        />
       </div>
       <div className="sm:w-40">
         <Field label="Role" htmlFor="role" required>
@@ -152,5 +174,81 @@ export function AgentRouting({
         Save
       </Button>
     </form>
+  );
+}
+
+/**
+ * Delete a staff member outright.
+ *
+ * Deliberately narrower than Deactivate, and secondary to it: deactivation is
+ * the right answer for someone who has left, because their history stays
+ * attached to them. Deletion only succeeds for a row that never acted — the
+ * account created by a typo — and the backend enforces that, naming what the
+ * person touched when it refuses.
+ *
+ * Confirms first. It is irreversible and sits next to a button people click
+ * routinely, which is exactly when a misclick happens.
+ */
+export function DeleteStaff({
+  userId,
+  name,
+  isSelf,
+}: {
+  userId: string;
+  name: string;
+  isSelf: boolean;
+}) {
+  const [state, formAction, pending] = useActionState<AdminState, FormData>(
+    deleteStaffAction,
+    {},
+  );
+  const [confirming, setConfirming] = useState(false);
+  const { show } = useToast();
+
+  useEffect(() => {
+    if (state.error) {
+      // The backend's sentence explains the refusal and names the alternative.
+      show(state.error, "error");
+      setConfirming(false);
+    }
+    if (state.ok) show(`${name} deleted`);
+  }, [state, show, name]);
+
+  // Deleting your own row logs you out, and if you are the last admin there is
+  // no way back in through the UI. Same guard as the activate toggle.
+  if (isSelf) return null;
+
+  return (
+    <>
+      <Button
+        variant="ghost"
+        onClick={() => setConfirming(true)}
+        disabled={pending}
+        className="text-sm"
+      >
+        Delete
+      </Button>
+
+      <Modal open={confirming} onClose={() => setConfirming(false)} title={`Delete ${name}?`}>
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-text">
+            This removes the account entirely and cannot be undone. It only works if they have
+            never been assigned a ticket, written a comment, or changed a setting — if they have,
+            deactivate them instead so their history stays intact.
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setConfirming(false)}>
+              Cancel
+            </Button>
+            <form action={formAction}>
+              <input type="hidden" name="user_id" value={userId} />
+              <Button type="submit" variant="danger" disabled={pending}>
+                {pending ? "Deleting…" : "Delete"}
+              </Button>
+            </form>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 }
