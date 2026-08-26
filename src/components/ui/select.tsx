@@ -28,7 +28,8 @@
 
 import { Check, ChevronDown } from "lucide-react";
 import type { KeyboardEvent } from "react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { Field } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
@@ -89,6 +90,7 @@ export function Select({
   const listRef = useRef<HTMLUListElement>(null);
   const typeahead = useRef({ buffer: "", at: 0 });
 
+
   // The empty choice is a real row so the arrow keys reach it, rather than a
   // special case they have to skip.
   const rows: SelectOption[] = required
@@ -101,6 +103,33 @@ export function Select({
   );
   const selectedLabel = rows[selectedIndex]?.label ?? placeholder;
 
+  // The panel is portalled to <body> and positioned in viewport coordinates,
+  // so it escapes any clipping ancestor. `Card` sets `overflow-hidden` for its
+  // rounded header, and the priority matrix puts a select inside a table cell —
+  // an absolutely positioned child of either gets cut off. Nothing short of
+  // leaving the subtree fixes that in general.
+  const [rect, setRect] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const place = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+    const box = trigger.getBoundingClientRect();
+
+    // Flip above when the space below cannot hold the list, so a control near
+    // the bottom of the window opens upward instead of off-screen.
+    const below = window.innerHeight - box.bottom;
+    const wanted = Math.min(rows.length * 28 + 8, 240);
+    const flip = below < wanted && box.top > below;
+
+    setRect({
+      top: flip ? box.top - Math.min(wanted, box.top) - 4 : box.bottom + 4,
+      left: box.left,
+      width: box.width,
+    });
+  }, [rows.length]);
+
   function commit(next: string) {
     if (value === undefined) setInternal(next);
     onValueChange?.(next);
@@ -112,6 +141,23 @@ export function Select({
     setActive(selectedIndex);
     setOpen(true);
   }
+
+  useLayoutEffect(() => {
+    if (open) place();
+  }, [open, place]);
+
+  useEffect(() => {
+    if (!open) return;
+    const reposition = () => place();
+    // Capture phase so an ANCESTOR scrolling (the app shell outlet, a table)
+    // moves the panel with its trigger rather than leaving it stranded.
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [open, place]);
 
   useEffect(() => {
     if (!open) return;
@@ -227,7 +273,7 @@ export function Select({
         onClick={() => (open ? setOpen(false) : openList())}
         onKeyDown={onKeyDown}
         className={cn(
-          "flex min-h-10 w-full cursor-pointer items-center justify-between gap-2 rounded-md border bg-surface px-3 py-2 text-left text-sm text-text",
+          "flex min-h-10 w-full cursor-pointer items-center justify-between gap-2 rounded-none border bg-surface px-3 py-2 text-left text-sm text-text",
           "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent",
           "disabled:cursor-not-allowed disabled:opacity-50",
           error ? "border-overdue" : "border-structure",
@@ -244,19 +290,23 @@ export function Select({
         />
       </button>
 
-      {open && (
-        <ul
-          ref={listRef}
-          id={listId}
-          role="listbox"
-          aria-label={label}
-          aria-activedescendant={`${selectId}-option-${active}`}
-          tabIndex={-1}
+      {open &&
+        mounted &&
+        rect &&
+        createPortal(
+          <ul
+            ref={listRef}
+            id={listId}
+            role="listbox"
+            aria-label={label}
+            aria-activedescendant={`${selectId}-option-${active}`}
+            tabIndex={-1}
+            style={{ top: rect.top, left: rect.left, minWidth: rect.width }}
           // `w-max` sizes to the longest option, `min-w-full` stops it being
           // narrower than the trigger, and `max-w-` keeps a long label from
           // running off a narrow viewport. Square corners are deliberate: the
           // panel reads as an extension of the field, not a separate card.
-          className="custom-scrollbar absolute z-30 mt-1 max-h-60 w-max min-w-full max-w-[min(22rem,80vw)] overflow-y-auto rounded-none border border-border bg-surface py-0.5 shadow-lg"
+            className="custom-scrollbar fixed z-50 max-h-60 w-max max-w-[min(22rem,80vw)] overflow-y-auto rounded-none border border-border bg-surface py-0.5 shadow-lg"
         >
           {rows.map((row, index) => {
             const isSelected = row.value === current;
@@ -285,9 +335,10 @@ export function Select({
                 {isSelected && <Check aria-hidden strokeWidth={2} className="size-4 shrink-0" />}
               </li>
             );
-          })}
-        </ul>
-      )}
+            })}
+          </ul>,
+          document.body,
+        )}
     </div>
   );
 
