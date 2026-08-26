@@ -34,8 +34,8 @@ export function BulkActionBar({
   if (count === 0) return null
 
   const content = (
-    <div className="flex w-full items-center justify-between gap-4 rounded-sm border border-blue-200 bg-blue-50/50 px-3 py-1.5 shadow-sm md:w-auto md:justify-end">
-      <span className="text-sm font-medium text-blue-900 whitespace-nowrap">
+    <div className="flex w-full items-center justify-between gap-4 rounded-sm border border-structure bg-canvas px-3 py-1.5 shadow-sm md:w-auto md:justify-end">
+      <span className="whitespace-nowrap text-sm font-medium text-text">
         {count} selected
       </span>
       <div className="flex items-center gap-2">
@@ -43,13 +43,11 @@ export function BulkActionBar({
           <BulkAssignDialog
             selectedIds={selectedIds}
             agents={agents}
-            onClear={onClear}
             onResult={onResult}
           />
         )}
         <BulkCloseDialog
           selectedIds={selectedIds}
-          onClear={onClear}
           onResult={onResult}
         />
         <Button variant="ghost" onClick={onClear}>
@@ -74,12 +72,13 @@ export function BulkActionBar({
 function BulkAssignDialog({
   selectedIds,
   agents,
-  onClear,
   onResult,
 }: {
   selectedIds: Set<string>
   agents: UserSummary[]
-  onClear: () => void
+  // No `onClear`: clearing the selection after a bulk action is the caller's
+  // job through `onResult` — queue-view empties it on full success and keeps
+  // only the failed ids otherwise, so a second path here would fight it.
   onResult: (result: BulkResult) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -154,11 +153,9 @@ function BulkAssignDialog({
 
 function BulkCloseDialog({
   selectedIds,
-  onClear,
   onResult,
 }: {
   selectedIds: Set<string>
-  onClear: () => void
   onResult: (result: BulkResult) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)

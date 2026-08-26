@@ -77,7 +77,6 @@ export function QueueView({
         <>
           <BulkActionBar
             selectedIds={selectedIds}
-            tickets={tickets}
             role={role}
             agents={agents}
             onClear={() => setSelectedIds(new Set())}

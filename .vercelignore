@@ -1,0 +1,30 @@
+# Files Vercel never needs to upload or build.
+#
+# Vercel deploys from the Git clone, so nothing untracked reaches it anyway —
+# this trims what a `vercel` CLI deploy would upload, and keeps specs and tests
+# out of the build context entirely.
+#
+# It does NOT affect what ships to browsers: Next bundles only what is
+# imported, so a test file was never in the client payload to begin with.
+
+# Specs and docs — reference material, not build input.
+spec/
+docs/
+*.md
+
+# Test suite and its config.
+**/*.test.ts
+**/*.test.tsx
+vitest.config.ts
+vitest.setup.ts
+coverage/
+
+# Local build state.
+.next/
+tsconfig.tsbuildinfo
+node_modules/
+
+# Never upload local secrets.
+.env
+.env.local
+.env.*.local
