@@ -101,7 +101,7 @@ export function FilterBar({
           hideLabel
           className={WELDED}
           value={filters.status ?? ""}
-          onChange={(event) => change({ status: event.target.value })}
+          onValueChange={(next) => change({ status: next })}
           options={STATUSES.map((s) => ({ value: s, label: statusLabel(s, "staff") }))}
         />
       </FilterControl>
@@ -112,7 +112,7 @@ export function FilterBar({
           hideLabel
           className={WELDED}
           value={filters.priority ?? ""}
-          onChange={(event) => change({ priority: event.target.value })}
+          onValueChange={(next) => change({ priority: next })}
           options={PRIORITIES.map((p) => ({ value: p, label: priorityLabel(p) }))}
         />
       </FilterControl>
@@ -123,7 +123,7 @@ export function FilterBar({
           hideLabel
           className={WELDED}
           value={filters.category ?? ""}
-          onChange={(event) => change({ category: event.target.value })}
+          onValueChange={(next) => change({ category: next })}
           options={CATEGORIES.map((c) => ({ value: c, label: categoryLabel(c) }))}
         />
       </FilterControl>
@@ -139,7 +139,7 @@ export function FilterBar({
             hideLabel
             className={WELDED}
             value={filters.tier ?? ""}
-            onChange={(event) => change({ tier: event.target.value })}
+            onValueChange={(next) => change({ tier: next })}
             options={TIERS.map((t) => ({ value: t, label: tierLabel(t) }))}
           />
         </FilterControl>

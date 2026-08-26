@@ -27,3 +27,18 @@ if (typeof HTMLDialogElement !== "undefined") {
     };
   }
 }
+
+/**
+ * jsdom implements no layout, so `scrollIntoView` does not exist on Element.
+ * Any component that keeps an active option in view — the Select listbox, the
+ * Combobox — throws on mount without this, which would put both widgets and
+ * their whole keyboard contract out of reach of tests.
+ *
+ * A no-op is the honest shim: there is nothing to scroll, and the assertions
+ * are about which option is active, not where it sits on screen.
+ */
+if (typeof Element !== "undefined" && !Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = function scrollIntoView() {
+    /* no layout in jsdom; nothing to do */
+  };
+}

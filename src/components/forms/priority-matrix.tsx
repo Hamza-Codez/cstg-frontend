@@ -12,6 +12,7 @@ import { useActionState, useEffect } from "react";
 
 import { savePriorityMatrixAction, type AdminState } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { categoryLabel, priorityLabel, tierLabel } from "@/lib/labels";
 import type { Category, CustomerTier, Priority, PriorityRuleEntry } from "@/lib/types";
@@ -61,18 +62,21 @@ export function PriorityMatrix({ rules }: { rules: PriorityRuleEntry[] }) {
                   const key = `${tier}|${category}`;
                   return (
                     <td key={key} className="px-4 py-3">
-                      <select
+                      {/* `hideLabel` because the cell already sits under a
+                          column header; the accessible name carries the full
+                          tier and category so a screen reader is not left with
+                          twelve identical "Priority" controls. */}
+                      <Select
+                        label={`${tierLabel(tier)}, ${categoryLabel(category)}`}
+                        hideLabel
+                        required
                         name={key}
-                        aria-label={`${tierLabel(tier)}, ${categoryLabel(category)}`}
                         defaultValue={lookup.get(key) ?? "MEDIUM"}
-                        className="w-full cursor-pointer rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
-                      >
-                        {PRIORITIES.map((p) => (
-                          <option key={p} value={p}>
-                            {priorityLabel(p)}
-                          </option>
-                        ))}
-                      </select>
+                        options={PRIORITIES.map((p) => ({
+                          value: p,
+                          label: priorityLabel(p),
+                        }))}
+                      />
                     </td>
                   );
                 })}

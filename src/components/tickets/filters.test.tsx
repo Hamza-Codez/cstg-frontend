@@ -55,7 +55,10 @@ describe("cursor handling", () => {
     const user = userEvent.setup();
     render(<FilterBar role="ADMIN" resultCount={0} />);
 
-    await user.selectOptions(screen.getAllByLabelText("Status")[0], "OPEN");
+    // `selectOptions` only drives a native <select>. Status is a listbox now
+    // (the native control could not be themed), so it opens and picks a row.
+    await user.click(screen.getAllByRole("combobox", { name: "Status" })[0]);
+    await user.click(screen.getByRole("option", { name: "Open" }));
 
     expect(replace).toHaveBeenCalled();
     const url = replace.mock.calls.at(-1)?.[0] as string;

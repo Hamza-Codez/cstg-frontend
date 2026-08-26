@@ -13,7 +13,8 @@ import {
 } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
-import { Field, Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 
 export function StaffForm() {
@@ -56,18 +57,19 @@ export function StaffForm() {
         />
       </div>
       <div className="sm:w-40">
-        <Field label="Role" htmlFor="role" required>
-          <select
-            id="role"
-            name="role"
-            defaultValue="AGENT"
-            className="cursor-pointer rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
-          >
-            <option value="AGENT">Agent</option>
-            <option value="DISPATCHER">Dispatcher</option>
-            <option value="ADMIN">Admin</option>
-          </select>
-        </Field>
+        {/* `required` drops the empty choice: a staff member always has a role,
+            so "Any" would be an answer the backend rejects. */}
+        <Select
+          label="Role"
+          name="role"
+          required
+          defaultValue="AGENT"
+          options={[
+            { value: "AGENT", label: "Agent" },
+            { value: "DISPATCHER", label: "Dispatcher" },
+            { value: "ADMIN", label: "Admin" },
+          ]}
+        />
       </div>
       <Button type="submit" variant="primary" disabled={pending}>
         Add staff

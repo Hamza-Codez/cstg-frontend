@@ -10,6 +10,8 @@
  */
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+
+import { Select } from "@/components/ui/select";
 import type { ReactNode } from "react";
 
 import {
@@ -41,11 +43,11 @@ function Control({ label, children }: { label: string; children: ReactNode }) {
 const WELDED = "rounded-t-none rounded-b-sm";
 
 /**
- * A native select with no empty option.
+ * A themed listbox with no empty option.
  *
- * `ui/select` always renders a placeholder choice, which is right for a filter
- * — clearing it means "any" — and wrong here: there is no such thing as no
- * period. Same classes, so the two bars still look identical.
+ * `ui/select` renders a placeholder choice by default, which is right for a
+ * filter — clearing it means "any" — and wrong here: there is no such thing as
+ * no period. `required` drops it.
  */
 function Choice<T extends string>({
   label,
@@ -59,18 +61,15 @@ function Choice<T extends string>({
   onChange: (next: T) => void;
 }) {
   return (
-    <select
-      aria-label={label}
+    <Select
+      label={label}
+      hideLabel
+      required
       value={value}
-      onChange={(event) => onChange(event.target.value as T)}
-      className={`min-h-10 cursor-pointer border border-structure bg-surface px-3 py-2 text-sm text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent ${WELDED}`}
-    >
-      {options.map((option) => (
-        <option key={option.id} value={option.id}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+      options={options.map((option) => ({ value: option.id, label: option.label }))}
+      onValueChange={(next) => onChange(next as T)}
+      className={WELDED}
+    />
   );
 }
 
